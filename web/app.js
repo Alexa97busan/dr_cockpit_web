@@ -44,7 +44,8 @@ async function loadList() {
   const s = $("subject").value;
   allList = await api(`/api/questions${s ? `?subject=${encodeURIComponent(s)}` : ""}`);
   list = allList; // 보기 없는 문항도 객관식 모드에서 보이게 한다 (보기 없으면 정답 보기로 푼다)
-  idx = 0;
+  // 객관식 모드에서는 첫 객관식 문항부터 시작한다 (없으면 처음 문항)
+  idx = qMode === "mc" ? Math.max(0, list.findIndex((x) => x.mc)) : 0;
   if (!list.length) {
     cur = null;
     // 이전 문항의 과목·보기·그림이 남지 않도록 화면을 함께 비운다
@@ -1194,19 +1195,20 @@ function renderList() {
     name.textContent = summaryText;
     const cnt = document.createElement("span");
     cnt.className = "text-xs font-normal tabular-nums text-neutral-400";
-    cnt.textContent = `${count}문항`;
+    cnt.textContent = count;
     sm.append(name, cnt);
     d.append(sm);
     return d;
   };
+  const mcCount = (items) => items.filter(({ x }) => x.mc).length;
   for (const [subject, sets] of groups) {
-    const total = [...sets.values()].reduce((a, v) => a + v.length, 0);
-    const big = folder(subject, total, !!q);
+    const all = [...sets.values()].flat();
+    const big = folder(subject, `${all.length}문항 · 객관식 ${mcCount(all)}`, !!q);
     big.classList.add("mt-4");
     const inner = document.createElement("div");
     inner.className = "mt-2 pl-2";
     for (const [setName, items] of sets) {
-      const small = folder(setName, items.length, !!q);
+      const small = folder(setName, `${items.length}문항 · 객관식 ${mcCount(items)}`, !!q);
       small.classList.add("mb-1");
       const wrap = document.createElement("div");
       wrap.className = "mt-2 pl-1";
@@ -1218,7 +1220,7 @@ function renderList() {
         num.textContent = `${x.no ?? i + 1}번`;
         const t = document.createElement("span");
         t.className = "break-keep text-sm leading-relaxed";
-        t.textContent = x.q || "(문항)";
+        t.textContent = `${x.mc ? "○ " : ""}${x.q || "(문항)"}`;
         b.append(num, t);
         b.onclick = () => {
           idx = i;
