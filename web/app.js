@@ -10,7 +10,7 @@ const VERDICT = {
 
 let list = [];
 let allList = [];   // 전체 문항 (객관식 모드에서는 list 가 이 중 객관식 가능한 것만 된다)
-let qMode = localStorage.getItem("qMode") === "sub" ? "sub" : "mc";
+let qMode = "mc"; // 시작은 항상 객관식 (저장된 qMode 무시). 전환은 이번 실행 중에만 유지
 let idx = 0;
 let cur = null;
 let answering = false;
@@ -43,7 +43,7 @@ async function loadList() {
   fullList = null;
   const s = $("subject").value;
   allList = await api(`/api/questions${s ? `?subject=${encodeURIComponent(s)}` : ""}`);
-  list = qMode === "mc" ? allList.filter((x) => x.mc) : allList;
+  list = allList; // 보기 없는 문항도 객관식 모드에서 보이게 한다 (보기 없으면 정답 보기로 푼다)
   idx = 0;
   if (!list.length) {
     cur = null;
@@ -542,7 +542,7 @@ function setQMode(m) {
   if (reviewOn) exitReview();
   qMode = m;
   localStorage.setItem("qMode", m);
-  list = m === "mc" ? allList.filter((x) => x.mc) : allList;
+  list = allList;
   if (!list.length) {
     qMode = "sub";
     list = allList;
@@ -568,7 +568,7 @@ paintModeBtn();
 // ---- 스와이프 동작 ----
 // 왼쪽으로 밀기 = 패스(다음 문제), 오른쪽으로 밀기 = 정답 보기(채점 없이 답을 바로 보여 줌)
 function openAnswer() {
-  if (!cur || qMode === "mc") return;
+  if (!cur || Array.isArray(cur.choices)) return;
   if (isTeacher()) {
     $("reveal").textContent = cur.answer;
     $("revealNote").textContent = cur.answer_note || "";
@@ -997,7 +997,7 @@ async function voiceCommand(said) {
   }
 
   // 주관식은 말한 내용을 채점하지 않는다
-  if (qMode !== "mc") {
+  if (qMode !== "mc" || !cur || !Array.isArray(cur.choices)) {
     await speak("주관식은 채점하지 않습니다. 정답이라고 말하면 답을 보여 드립니다.");
     return { read: false };
   }
