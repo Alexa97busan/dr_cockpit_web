@@ -156,11 +156,27 @@ def _page_blur(uid):
     return _PAGE_BLUR.get(str(uid), {})
 
 
+REPAIR_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db_study", "repair_items.json")
+
+
+def _repair():
+    """수리중 표시 문항 (db_study/repair_items.json). 없으면 표시 없음."""
+    try:
+        with open(REPAIR_PATH, encoding="utf-8") as f:
+            d = json.load(f)
+        return d.get("status") or "", set(d.get("uids") or [])
+    except (OSError, ValueError):
+        return "", set()
+
+
 def _public(n, x):
     """목록·문항 공통 필드. 학생용 문항은 정답·풀이를 여기서 빼고, 교사용만 답을 함께 준다."""
     out = {"n": n, "uid": x.get("uid"), "subject": x["subject"], "set": x["set"], "kind": x["kind"],
            "question": x["question"], "figures": x.get("figures", []),
            "pages": _page_imgs(x.get("uid")), "blur": _page_blur(x.get("uid"))}
+    status, repair_uids = _repair()
+    if status and x.get("uid") in repair_uids:
+        out["status"] = status
     if x["kind"] == "교사용":
         verdict = (x.get("answer_check") or {}).get("verdict")
         if x["answer"]:

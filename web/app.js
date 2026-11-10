@@ -71,7 +71,7 @@ async function show() {
 // 과목 → 3D 해설 다이어그램 단원 카드 id (web/diagrams/diagrams_3d.html)
 const DIAG_UNIT = {
   "가솔린 전자제어장치정비": "unit05_gasoline",
-  "디젤전자제어장치정비": "unit04_crdi",
+  "디젤 전자제어장치정비": "unit04_crdi",
   "유압식전자제어 현가장치정비": "unit01_suspension",
   "유압식전자제어 조향장치정비": "unit02_steering",
   "전자제어공압식 제동장치정비": "unit03_brakes",
@@ -93,7 +93,7 @@ function renderCur(data) {
   paintDiagLink(cur.subject);
   $("pos").textContent = `${idx + 1} / ${list.length}`;
   paintEdges();
-  $("question").textContent = cur.question;
+  $("question").textContent = cur.status ? `[${cur.status}] ${cur.question}` : cur.question;
   $("answerOpen").textContent = isTeacher() ? "정답 보기" : "정답 보기";
   paintChoices(cur);
   showFigures([...(cur.pages || []), ...(cur.figures || [])], cur.blur || {});
@@ -1161,6 +1161,10 @@ function currentUnit() {
   const x = list[idx];
   return x ? { subject: x.subject, set: x.set } : null;
 }
+// 과목 → 원본 PDF 파일 (web/pdf/). 목차에서 새 창으로 연다.
+const ORIGINAL_PDFS = {
+  "디젤 전자제어장치정비": [["학생용", "pdf/diesel_student.pdf"], ["교사용", "pdf/diesel_teacher.pdf"]],
+};
 function renderList() {
   const body = $("listBody");
   const q = $("listSearch").value.trim();
@@ -1207,6 +1211,21 @@ function renderList() {
     big.classList.add("mt-4");
     const inner = document.createElement("div");
     inner.className = "mt-2 pl-2";
+    const pdfs = ORIGINAL_PDFS[subject];
+    if (pdfs) {
+      const bar = document.createElement("div");
+      bar.className = "mb-2 flex flex-wrap gap-2";
+      for (const [label, href] of pdfs) {
+        const a = document.createElement("a");
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.className = "bg-white px-3 py-2 text-sm font-semibold text-[#1040E8] active:scale-[.99]";
+        a.textContent = `원본 PDF · ${label}`;
+        bar.append(a);
+      }
+      inner.append(bar);
+    }
     for (const [setName, items] of sets) {
       const small = folder(setName, `${items.length}문항 · 객관식 ${mcCount(items)}`, !!q);
       small.classList.add("mb-1");
