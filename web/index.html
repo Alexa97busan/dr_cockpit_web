@@ -25,7 +25,7 @@
     --primary:#1040e8; --accent:#1040e8; --accent-tint:#e7eeff;
     --positive:#247b50; --negative:#c4242a;
     --warning-bg:#fffbeb; --warning-border:#fde68a; --warning-ink:#92400e;
-    --radius-card:16px; --radius-control:12px;
+    --radius-card:0; --radius-control:0;
     --shadow-card:0 8px 32px -4px rgba(16,64,232,.08),0 2px 8px -2px rgba(30,41,59,.05);
     --font:"Plus Jakarta Sans","Pretendard",system-ui,sans-serif;
     --display:"Space Grotesk","Pretendard",system-ui,sans-serif;
@@ -60,9 +60,6 @@
   #pos{font-size:14px;color:var(--muted)}
   .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
   .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  #worldPick{display:flex;gap:6px}
-  #worldPick button{height:32px;padding:0 12px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:13px;color:var(--text)}
-  #worldPick button.on{background:var(--primary);border-color:var(--primary);color:#fff}
   #clock{display:flex;align-items:center;gap:8px}
   #clockDots{display:flex;gap:4px}
   #clockDots span{border-radius:0!important}
@@ -73,8 +70,8 @@
   #progress{transform:none!important;margin-top:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card)}
   .prog-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
   #progNum{font-size:16px;font-weight:500;color:var(--text)}
-  .bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
-  #progFill{height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .5s ease-out}
+  .bar{height:6px;background:var(--rule);border-radius:0;overflow:hidden}
+  #progFill{height:100%;width:0;background:var(--accent);border-radius:0;transition:width .5s ease-out}
 
   /* 본문 */
   .split{display:block}
@@ -88,7 +85,7 @@
   .page-tools{display:flex;justify-content:flex-end;margin-bottom:8px}
   .page-frame{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;margin-bottom:12px}
   .page-frame img{width:100%;height:auto;display:block}
-  .ans-blur{position:absolute;background:rgba(255,255,255,.55);border-radius:4px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)} /* taste-skill-ignore: 정답 가림용 블러는 기능이다 */
+  .ans-blur{position:absolute;background:rgba(255,255,255,.55);border-radius:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)} /* taste-skill-ignore: 정답 가림용 블러는 기능이다 */
   .unblur .ans-blur{display:none}
 
   /* 문제 카드: 흰 면, 1px 테두리, 그림자 없음 */
@@ -142,7 +139,7 @@
 
   /* 번호 점 */
   .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:300px;margin:20px auto 0}
-  .dot{width:9px;height:9px;border-radius:2px!important;border:1.5px solid #aab3be;background:transparent;padding:0}
+  .dot{width:9px;height:9px;border-radius:0!important;border:1.5px solid #aab3be;background:transparent;padding:0}
   .dot:hover{transform:scale(1.3)}
   .dot.ok{background:var(--accent);border-color:var(--accent)}
   .dot.ng{background:#8a929c;border-color:#8a929c}
@@ -153,11 +150,11 @@
   #status{margin-top:12px;min-height:20px;text-align:center;font-size:14px;color:var(--muted)}
 
   /* 해설 시트: 카드 안 답 아래에 펼쳐진다 */
-  .sheet{position:fixed;z-index:30;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;max-height:72dvh;overflow-y:auto;background:var(--surface);border-top:1px solid var(--border);border-radius:12px 12px 0 0;padding:12px 24px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  .sheet{position:fixed;z-index:30;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;max-height:72dvh;overflow-y:auto;background:var(--surface);border-top:1px solid var(--border);border-radius:0;padding:12px 24px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
   .sheet.open{transform:none}
   #sheet.inline{position:relative;inset:auto;transform:none;max-height:none;overflow:visible;max-width:none;z-index:auto;background:transparent;border:0;border-top:1px solid var(--rule);border-radius:0;padding:20px 0 0;margin:24px 0 0}
   #sheet.inline>div:first-child{display:none}
-  .sheet-grip{width:40px;height:4px;background:var(--control);border-radius:2px;margin:0 auto 14px}
+  .sheet-grip{width:40px;height:4px;background:var(--control);border-radius:0;margin:0 auto 14px}
   .scrim{position:fixed;inset:0;z-index:29;background:rgba(17,20,24,.25);opacity:0;pointer-events:none;transition:opacity .25s}
   .scrim.show{opacity:1;pointer-events:auto}
   #chip{font-size:20px;font-weight:700}
@@ -171,8 +168,8 @@
   #listSearch{margin-top:12px;width:100%;height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px}
 
   /* 화면 가장자리 장식과 떠 있는 키는 쓰지 않는다 (JS는 그대로 동작) */
-  .gauge,.edge-no,.edge-nav,.today,#world,#floor{display:none!important}
-  #loaderPause{position:fixed;left:12px;bottom:14px;z-index:5;width:40px;height:40px;padding:0;font-size:14px;line-height:1;border-radius:50%;background:var(--surface);border:1px solid var(--control);color:var(--text)}
+  .gauge,.edge-no,.edge-nav,.today{display:none!important}
+  #loaderPause{position:fixed;left:12px;bottom:14px;z-index:5;width:40px;height:40px;padding:0;font-size:14px;line-height:1;border-radius:0;background:var(--surface);border:1px solid var(--control);color:var(--text)}
 
   @media (max-width:640px){
     main{padding:16px 16px 104px}
@@ -191,8 +188,6 @@
 </style>
 </head>
 <body class="min-h-dvh antialiased atmos">
-<div id="world" aria-hidden="true"></div>
-<div id="floor" aria-hidden="true"></div>
 
 <main id="main">
   <header class="topbar">
@@ -210,11 +205,6 @@
   <div class="toolbar">
     <select id="subject" aria-label="과목" class="select"></select>
     <div class="toolbar-right">
-      <div id="worldPick" role="group" aria-label="배경">
-        <button data-w="earth" type="button">지구</button>
-        <button data-w="moon" type="button">달</button>
-        <button data-w="space" type="button">우주</button>
-      </div>
       <div id="clock" aria-label="현재 시간">
         <div id="clockDots"></div>
         <div id="clockDate" class="mono"></div>

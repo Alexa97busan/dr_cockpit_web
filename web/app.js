@@ -115,7 +115,7 @@ function setRingHint(t) {
 }
 
 // ---- 로딩바: 마우스를 피해 돌아다닌다 (웹챗 사이트의 마우스 피하기 로직 참고) ----
-// 세계(중력)를 고른다. 지구·달은 바닥을 걷고 뛰고, 우주는 중력 없이 떠다닌다.
+// 바닥 물리: 지구 중력으로 떨어지고, 바닥을 걷고 뛴다.
 // 1 쉬움 ~ 5 어려움. 난이도는 EVADE_LV 숫자만 바꾸면 된다.
 const EVADE_LV = 3;
 const EVADE = {
@@ -126,21 +126,15 @@ const EVADE = {
   5: { dodge: 1, pad: 1.4, want: 1 },
 };
 const evade = EVADE[EVADE_LV];
-const WORLDS = {
-  earth: { g: 2400, jump: 820, floor: true },  // 지구: 중력 강함, 살짝 뜀
-  moon: { g: 520, jump: 640, floor: true },    // 달: 중력 약함, 높이 뜀
-  space: { g: 0, jump: 0, floor: false },      // 우주: 중력 없음, 떠다님
-};
+const WORLD = { g: 2400, jump: 820, floor: true }; // 중력 강함, 살짝 뜀
 const FLOOR_H = 28; // 화면 아래 바닥 띠 높이
-let world = "earth";
-try { const v = localStorage.getItem("world"); if (WORLDS[v]) world = v; } catch (e) {}
 
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // mode: wander(배회) · flee(도망) · lazy(귀찮아서 가만히) · rest(기운 충전)
 const R = {
-  world, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, w: 1.5, z: 1, cap: 600, onFloor: false,
+  x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, w: 1.5, z: 1, cap: 600, onFloor: false,
   px: -1e4, py: -1e4, pvx: 0, pvy: 0, pt: 0,   // 마우스 위치와 속도
   mode: "wander", think: 0, reflexAt: 0, nextAt: 0, lazyUntil: 0,
   energy: 1, last: 0,                           // 기운: 도망치면 줄고 쉬면 찬다
@@ -178,7 +172,7 @@ if (lpBtn) lpBtn.addEventListener("click", () => setLoaderPaused(!LOADER_PAUSED)
 const barEl = () => $("progress");
 const bw = () => barEl().offsetWidth;
 const bh = () => barEl().offsetHeight;
-const inGround = () => WORLDS[R.world].floor;
+const inGround = () => WORLD.floor;
 const groundY = () => Math.max(0, innerHeight - FLOOR_H - bh());
 const mx = () => Math.max(0, innerWidth - bw() - 8);
 const my = () => Math.max(0, innerHeight - bh() - 8);
@@ -192,7 +186,7 @@ const arrived = () => (inGround()
 // 땅에서 뛰기: 지구·달에서만. 중력 세기에 따라 높이가 달라진다.
 function hop(p) {
   if (!inGround() || !R.onFloor || Math.random() >= p) return;
-  R.vy = -WORLDS[R.world].jump * (0.85 + 0.3 * R.energy);
+  R.vy = -WORLD.jump * (0.85 + 0.3 * R.energy);
   R.onFloor = false;
 }
 
@@ -320,7 +314,7 @@ function frame(now) {
     }
   }
 
-  const W = WORLDS[R.world];
+  const W = WORLD;
   if (W.floor) {
     // 지구·달: 중력으로 떨어지고, 바닥에 닿으면 멈춘다. 가로 방향만 스프링으로 걷는다.
     R.vy += W.g * dt;
@@ -381,30 +375,12 @@ window.addEventListener("mouseout", (e) => {
   R.px = -1e4; R.py = -1e4; R.pvx = 0; R.pvy = 0; R.pt = 0;
 });
 
-// 세계(배경) 바꾸기. 지구·달은 떨어져서 바닥에 선다. 우주는 떠 있던 자리에서 그대로 떠다닌다.
-function setWorld(w) {
-  if (!WORLDS[w]) return;
-  R.world = w;
-  world = w;
-  try { localStorage.setItem("world", w); } catch (e) {}
-  document.body.classList.remove("world-earth", "world-moon", "world-space", "dark");
-  document.body.classList.add(`world-${w}`);
-  document.querySelectorAll("#worldPick button").forEach((b) => b.classList.toggle("on", b.dataset.w === w));
-  R.vy = 0;
-  R.onFloor = false;
-  R.mode = "wander";
-  R.think = 0;
-  R.tx = R.x;
-  R.ty = R.y;
-  R.nextAt = performance.now() + 600;
-}
 
-// 시작 위치: 지구·달은 바닥 가운데, 우주는 화면 가운데
+// 시작 위치: 바닥 가운데
 function startBar() {
-  setWorld(world);
   R.x = (innerWidth - bw()) / 2;
-  R.y = inGround() ? groundY() : innerHeight / 2;
-  R.onFloor = inGround();
+  R.y = groundY();
+  R.onFloor = true;
   R.tx = R.x;
   R.ty = R.y;
   barEl().style.transform = `translate3d(${R.x.toFixed(1)}px, ${R.y.toFixed(1)}px, 0)`;
@@ -419,7 +395,6 @@ window.addEventListener("resize", () => {
   if (inGround()) { R.y = groundY(); R.ty = groundY(); }
   else { R.y = clamp(R.y, 0, my()); R.ty = clamp(R.ty, 0, my()); }
 });
-document.querySelectorAll("#worldPick button").forEach((b) => b.addEventListener("click", () => setWorld(b.dataset.w)));
 setTimeout(startBar, 0);
 
 // 원본 PDF에서 잘라 둔 그림. 웹 서버(3000) 기준 상대 경로로 불러온다.
