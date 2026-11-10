@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D 문제해설 다이어그램 뷰어 - DR COCKPIT</title>
+  <style>
+    :root {
+      --cobalt: #1040E8;
+      --cobalt-dark: #002CB5;
+      --steel: #8EA7C2;
+      --ink: #111C2D;
+      --muted: #444656;
+      --surface: #F9F9FF;
+      --surface-container: #E7EEFF;
+      --bg-gradient: linear-gradient(135deg, #DCE5EE 0%, #C8D6E5 100%);
+      --glass: rgba(255, 255, 255, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --shadow: 0 8px 32px -4px rgba(16, 64, 232, 0.08), 0 2px 8px -2px rgba(30, 41, 59, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Apple SD Gothic Neo", Pretendard, sans-serif;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+    }
+    .nav-back:hover {
+      background: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .header-text h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #0E1B2E;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cobalt);
+      background: var(--surface-container);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.04em;
+    }
+
+    .header-text p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      padding: 10px 14px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--cobalt);
+      color: #FFFFFF;
+    }
+
+    .guide-tip {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px -6px rgba(16, 64, 232, 0.15);
+    }
+
+    .card-top {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(142, 167, 194, 0.2);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .card-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cobalt);
+      letter-spacing: 0.05em;
+    }
+
+    .card-category {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(16, 64, 232, 0.08);
+      color: var(--cobalt-dark);
+      border-radius: 4px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111C2D;
+    }
+
+    .card-source {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* 이미지 뷰어 및 드롭존 */
+    .image-zone {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      background: #EAEFF5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(142, 167, 194, 0.2);
+    }
+
+    .image-zone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+
+    .image-zone:hover img {
+      transform: scale(1.03);
+    }
+
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(240, 245, 255, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border: 2px dashed var(--steel);
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .drop-overlay.has-image {
+      opacity: 0;
+    }
+
+    .image-zone:hover .drop-overlay.has-image {
+      opacity: 0.85;
+      background: rgba(17, 28, 45, 0.75);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .drop-overlay svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--cobalt);
+      margin-bottom: 8px;
+    }
+
+    .image-zone:hover .drop-overlay.has-image svg {
+      stroke: #FFFFFF;
+    }
+
+    .drop-text {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .drop-sub {
+      font-size: 11px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .card-body {
+      padding: 16px 18px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .key-points {
+      background: rgba(240, 243, 255, 0.75);
+      border: 1px solid rgba(216, 227, 251, 0.8);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .key-title {
+      font-weight: 700;
+      color: var(--cobalt);
+      margin-bottom: 4px;
+    }
+
+    .key-points ul {
+      list-style-position: inside;
+      color: #334155;
+    }
+
+    .key-points li {
+      margin-bottom: 2px;
+    }
+
+    /* 모달 라이트박스 */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 28, 45, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 1080px;
+      width: 100%;
+      background: #FFFFFF;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-img {
+      width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      background: #DCE5EE;
+      display: block;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .modal-close {
+      padding: 6px 16px;
+      background: var(--cobalt);
+      color: #FFFFFF;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-text">
+        <h1>
+          3D 문제해설 다이어그램 뷰어
+          <span class="badge">Atmospheric Serenity</span>
+        </h1>
+        <p>채팅창의 3D 렌더링 이미지를 각 카드로 드래그하거나 클릭하여 로컬 캐시에 즉시 보관·열람할 수 있습니다.</p>
+      </div>
+      <a class="nav-back" href="hub.html">
+        <span>← DR 허브로 이동</span>
+      </a>
+    </header>
+
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab-btn active" data-filter="all">전체 (9)</button>
+        <button class="tab-btn" data-filter="chassis">섀시계통 (3)</button>
+        <button class="tab-btn" data-filter="engine">엔진계통 (4)</button>
+        <button class="tab-btn" data-filter="electric">전기·통신 (2)</button>
+      </div>
+      <div class="guide-tip">
+        <span>💡 <b>Tip:</b> 채팅창의 이미지를 카드 영역으로 직접 끌어다 놓으면 영구 저장됩니다.</span>
+      </div>
+    </div>
+
+    <div class="grid" id="cardGrid">
+      <!-- 1. 현가장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 01</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">차체 4대 진동 모드</h2>
+          <div class="card-source">9.유압식전자제어 현가장치정비1 (문제 1~5번)</div>
+        </div>
+        <div class="image-zone" data-id="unit01_suspension">
+          <img id="img_unit01_suspension" alt="차체 4대 진동 모드">
+          <div class="drop-overlay" id="drop_unit01_suspension">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">현가장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">무게중심(CG) 기준 3차원 축선(X, Y, Z)에 대한 회전 모멘트 및 상하 병진 진동 역학을 한눈에 비교합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>바운싱: Z축 수직 상하 운동 (요철 통과)</li>
+              <li>피칭: Y축 중심 앞뒤 진동 (방지턱, 급제동)</li>
+              <li>롤링: X축 중심 좌우 회전 (선회 및 비탈길)</li>
+              <li>요잉: Z축 중심 평면 선회 (미끄러짐 및 스핀)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 조향장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 02</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">R-MDPS 랙 앤 피니언 조향 기구</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비1 (문제 1, 2, 7, 8, 10번)</div>
+        </div>
+        <div class="image-zone" data-id="unit02_steering">
+          <img id="img_unit02_steering" alt="MDPS 조향 기구">
+          <div class="drop-overlay" id="drop_unit02_steering">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">조향장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">운전자 조향 입력 토크 검출부터 전동 모터 보조력을 통한 랙 샤프트 직선 변위 변환 과정을 도해화했습니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>피니언-랙 기어 기계적 감속 기구</li>
+              <li>R-MDPS 모터 랙축 직결 구동</li>
+              <li>비접촉식 토크 및 조향각 센서 계측</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 제동장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 03</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">ABS 4센서 4채널 시스템</h2>
+          <div class="card-source">11.전자제어공압식 제동장치정비1 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit03_brakes">
+          <img id="img_unit03_brakes" alt="ABS 제동 시스템">
+          <div class="drop-overlay" id="drop_unit03_brakes">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">제동장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">4개 차륜의 휠 스피드 센서 피드백을 기반으로 ABS 유압 모듈레이터가 각 캘리퍼 유압을 독립 제어합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>4센서 4채널 완전 독립 유압 라인</li>
+              <li>감압 / 유지 / 증압 고속 솔레노이드 제어</li>
+              <li>차륜 록(Lock-up) 방지 및 조향성 유지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 디젤전자 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 04</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">커먼레일 (CRDi) 연료 시스템</h2>
+          <div class="card-source">2.디젤전자제어장치정비1 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit04_crdi">
+          <img id="img_unit04_crdi" alt="CRDi 연료 시스템">
+          <div class="drop-overlay" id="drop_unit04_crdi">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">디젤전자 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">연료탱크 저압 펌프 $\to$ 고압 펌프 $\to$ 커먼레일 파이프 $\to$ 고압 인젝터로 이어지는 연료 이송 순서를 보여줍니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>저압 펌프 $\to$ 고압 펌프 $\to$ 레일 $\to$ 인젝터</li>
+              <li>레일 압력 센서 (RPS) 및 압력 제한 밸브</li>
+              <li>다단 분사(파일럿/주분사/포스트분사)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 가솔린전자 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 05</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">ETC 스로틀 바디 및 흡기 분사</h2>
+          <div class="card-source">1.가솔린 전자제어장치정비1, 2</div>
+        </div>
+        <div class="image-zone" data-id="unit05_gasoline">
+          <img id="img_unit05_gasoline" alt="가솔린 흡기 분사">
+          <div class="drop-overlay" id="drop_unit05_gasoline">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">가솔린전자 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">전자식 스로틀 밸브 개도량과 MAP 센서 압력에 따라 인젝터가 흡기 밸브를 향해 미립화 연료를 분사합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>ETC 모터 구동 및 TPS 듀얼 센서</li>
+              <li>흡기 매니폴드 부압(MAP) 및 공기량 계측</li>
+              <li>이론공연비(14.7:1) 혼합기 형성</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. 냉난방장치 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 06</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">HVAC 에어컨 4대 냉매 사이클</h2>
+          <div class="card-source">4.냉난방장치정비1 (문제 1, 3, 7~9번)</div>
+        </div>
+        <div class="image-zone" data-id="unit06_hvac">
+          <img id="img_unit06_hvac" alt="HVAC 냉매 사이클">
+          <div class="drop-overlay" id="drop_unit06_hvac">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">냉난방장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">압축기, 응축기, 팽창밸브(TXV), 증발기 사이에서 고압/저압 냉매의 기화·액화 열교환 원리를 나타냅니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>압축기: 저온저압 기체 $\to$ 고온고압 기체</li>
+              <li>응축기: 고온고압 기체 $\to$ 고온고압 액체</li>
+              <li>팽창밸브(TXV): 고압 액체 $\to$ 저압 미무액</li>
+              <li>증발기: 저압 액체 기화열 흡수(실내 냉각)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. 통신장치 -->
+      <div class="card" data-cat="electric">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 07</span>
+            <span class="card-category">전기·통신</span>
+          </div>
+          <h2 class="card-title">CAN 버스 및 종단저항 (120Ω)</h2>
+          <div class="card-source">5.네트워크통신장치정비1, 2 (예상문제2 5~7번)</div>
+        </div>
+        <div class="image-zone" data-id="unit07_can">
+          <img id="img_unit07_can" alt="CAN 버스 통신망">
+          <div class="drop-overlay" id="drop_unit07_can">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">통신장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">트위스티드 페어 차동 신호 버스 양 끝단의 120Ω 종단저항과 게이트웨이를 통한 제어기 통신 구조입니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>CAN-H / CAN-L 트위스티드 페어 노이즈 상쇄</li>
+              <li>양단 120Ω 종단저항 (합성 저항 60Ω)</li>
+              <li>중앙 게이트웨이 및 멀티마스터 프로토콜</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. 변속기 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 08</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">토크컨버터 내부 유체 순환</h2>
+          <div class="card-source">7.자동변속기정비 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit08_transmission">
+          <img id="img_unit08_transmission" alt="토크컨버터 유체 순환">
+          <div class="drop-overlay" id="drop_unit08_transmission">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">변속기 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">엔진 구동 펌프 임펠러와 터빈 사이에서 원웨이 클러치 스테이터가 오일 방향을 변환해 토크를 증대합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>펌프 $\to$ 터빈 $\to$ 스테이터 유체 소용돌이 순환</li>
+              <li>원웨이 스프래그 클러치 역회전 방지</li>
+              <li>스톨 구간 최대 2~3배 토크 변환비</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. 배출가스 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 09</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">PCV 환원 및 DPF / SCR 후처리</h2>
+          <div class="card-source">3.배출가스장치정비1, 2 (문제 1~3, 7번)</div>
+        </div>
+        <div class="image-zone" data-id="unit09_emissions">
+          <img id="img_unit09_emissions" alt="배출가스 후처리 시스템">
+          <div class="drop-overlay" id="drop_unit09_emissions">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">배출가스 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">크랭크케이스 블로바이가스(HC) 재순환 루프와 배기 매니폴드 DPF 차압센서 및 SCR 요소수 분사 회로입니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>PCV 밸브 블로바이가스 흡기 포트 환원</li>
+              <li>DPF 전후단 차압센서 매연 포집량 산출</li>
+              <li>SCR 요소수(AdBlue) 분사를 통한 질소산화물 환원</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 라이트박스 모달 -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <img id="modalImg" class="modal-img" src="" alt="확대 뷰">
+      <div class="modal-footer">
+        <span class="modal-title" id="modalTitle">3D 다이어그램 상세</span>
+        <button class="modal-close" id="modalClose">닫기 (ESC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이미지 업로드 히든 인풋 -->
+  <input type="file" id="filePicker" accept="image/*" style="display:none">
+
+  <script>
+    const STORAGE_PREFIX = "dr_diagram_3d_";
+    let activeZoneId = null;
+
+    // 초기 로컬 스토리지 이미지 복원
+    document.querySelectorAll(".image-zone").forEach(zone => {
+      const id = zone.dataset.id;
+      const img = document.getElementById("img_" + id);
+      const drop = document.getElementById("drop_" + id);
+      const saved = localStorage.getItem(STORAGE_PREFIX + id);
+
+      if (saved) {
+        img.src = saved;
+        drop.classList.add("has-image");
+        drop.querySelector(".drop-text").textContent = "이미지 변경 또는 확대";
+      }
+
+      // 클릭 시 라이트박스 열기 또는 파일 선택
+      zone.addEventListener("click", () => {
+        if (img.src && img.src.startsWith("data:")) {
+          openModal(img.src, zone.closest(".card").querySelector(".card-title").textContent);
+        } else {
+          activeZoneId = id;
+          document.getElementById("filePicker").click();
+        }
+      });
+
+      // 드래그 앤 드롭 지원
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.style.borderColor = "var(--cobalt)";
+      });
+      zone.addEventListener("dragleave", e => {
+        zone.style.borderColor = "";
+      });
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.style.borderColor = "";
+        
+        // 브라우저 내부 이미지 드래그 (URL/Base64)
+        const html = e.dataTransfer.getData("text/html");
+        if (html) {
+          const match = html.match(/src=["']([^"']+)["']/);
+          if (match && match[1]) {
+            saveImage(id, match[1]);
+            return;
+          }
+        }
+
+        // 파일 드롭
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          const file = e.dataTransfer.files[0];
+          const reader = new FileReader();
+          reader.onload = evt => saveImage(id, evt.target.result);
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+
+    // 파일 선택 피커 핸들러
+    document.getElementById("filePicker").addEventListener("change", e => {
+      if (e.target.files && e.target.files[0] && activeZoneId) {
+        const reader = new FileReader();
+        reader.onload = evt => saveImage(activeZoneId, evt.target.result);
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+
+    function saveImage(id, dataUrl) {
+      try {
+        localStorage.setItem(STORAGE_PREFIX + id, dataUrl);
+      } catch (err) {
+        console.warn("Storage quota exceeded", err);
+      }
+      const img = document.getElementById("img_" + id);
+      const drop = document.getElementById("drop_" + id);
+      img.src = dataUrl;
+      drop.classList.add("has-image");
+      drop.querySelector(".drop-text").textContent = "이미지 변경 또는 확대";
+    }
+
+    // 라이트박스 모달
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    function openModal(src, title) {
+      modalImg.src = src;
+      modalTitle.textContent = title;
+      modal.classList.add("active");
+    }
+    document.getElementById("modalClose").addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
+    window.addEventListener("keydown", e => { if (e.key === "Escape") modal.classList.remove("active"); });
+
+    // 카테고리 필터링 탭
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const filter = btn.dataset.filter;
+        document.querySelectorAll(".card").forEach(card => {
+          if (filter === "all" || card.dataset.cat === filter) {
+            card.style.display = "flex";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

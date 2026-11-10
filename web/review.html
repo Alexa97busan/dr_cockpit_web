@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오답노트 복습</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1b; --sub:#6b6a66; --line:#e2e0da; --ok:#1f7a4d; --bad:#b3261e; --accent:#2b5fd9; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg:#16161a; --card:#1f1f25; --ink:#eeede9; --sub:#9b9a95; --line:#34343c; --ok:#5bd39a; --bad:#ff8a80; --accent:#8ab4ff; }
+  }
+  :root[data-theme="dark"] { --bg:#16161a; --card:#1f1f25; --ink:#eeede9; --sub:#9b9a95; --line:#34343c; --ok:#5bd39a; --bad:#ff8a80; --accent:#8ab4ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 -apple-system, "Apple SD Gothic Neo", sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:var(--sub); font-size:14px; margin-bottom:16px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:8px 14px; border-radius:8px; cursor:pointer; }
+  button.on { border-color:var(--accent); color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  .q { white-space:pre-wrap; margin:0 0 14px; }
+  .opts { display:grid; gap:8px; }
+  .opt { text-align:left; padding:12px 14px; }
+  .opt.right { border-color:var(--ok); color:var(--ok); }
+  .opt.wrong { border-color:var(--bad); color:var(--bad); }
+  .verdict { margin-top:14px; font-weight:600; }
+  .verdict.ok { color:var(--ok); } .verdict.ng { color:var(--bad); }
+  .expl { margin-top:10px; white-space:pre-wrap; font-size:15px; color:var(--ink); border-top:1px dashed var(--line); padding-top:10px; }
+  .meta { color:var(--sub); font-size:13px; margin-top:10px; }
+  .next { margin-top:14px; }
+  .err { color:var(--bad); }
+  @media (max-width:480px) { main { padding:16px 14px 40px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>오답노트 복습</h1>
+  <div class="sub" id="stats">불러오는 중…</div>
+  <div class="bar">
+    <button id="m-all" class="on">전체 문제</button>
+    <button id="m-wrong">틀린 문제만</button>
+  </div>
+  <div class="card" id="box"><div class="sub">불러오는 중…</div></div>
+</main>
+<script>
+const API = "http://127.0.0.1:8765/api/review";
+let mode = "all";
+let cur = null;      // 현재 카드
+let answered = false;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function api(path, opts) {
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.status);
+  return r.json();
+}
+
+async function loadStats() {
+  try {
+    const s = await api("/stats");
+    $("stats").textContent = `전체 ${s.total}문항 · 틀린 적 있음 ${s.wrong_ever} · 복습 필요 ${s.needs_review} · 숙달 ${s.mastered}`;
+  } catch (e) {
+    $("stats").innerHTML = '<span class="err">API 연결 실패 (127.0.0.1:8765). run_web.sh 로 서버를 띄우세요.</span>';
+  }
+}
+
+async function next() {
+  answered = false;
+  $("box").innerHTML = '<div class="sub">불러오는 중…</div>';
+  try {
+    const r = await api(`/next?mode=${mode}${cur ? "&exclude=" + encodeURIComponent(cur.id) : ""}`);
+    if (r.done) {
+      cur = null;
+      $("box").innerHTML = mode === "wrong"
+        ? '<div>복습할 틀린 문제가 없습니다.</div>'
+        : '<div>문제가 없습니다.</div>';
+      return;
+    }
+    cur = r.card;
+    show();
+  } catch (e) {
+    $("box").innerHTML = `<div class="err">불러오기 실패: ${esc(e.message)}</div>`;
+  }
+}
+
+function show() {
+  const c = cur;
+  const st = c.state;
+  const opts = c.options.map((o, i) =>
+    `<button class="opt" data-i="${i}">${["①","②","③","④","⑤"][i] || (i + 1)} ${esc(o)}</button>`).join("");
+  $("box").innerHTML = `
+    <div class="meta">${esc(c.subject)} · ${c.no}번</div>
+    <p class="q">${esc(c.question)}</p>
+    <div class="opts" id="opts">${opts}</div>
+    <div id="result"></div>
+    <div class="meta">이 문항: 시도 ${st.attempts}회 · 틀림 ${st.wrong}회 · 연속 정답 ${st.streak}</div>`;
+  document.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => answer(+b.dataset.i)));
+}
+
+async function answer(choice) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll(".opt").forEach((b) => b.disabled = true);
+  try {
+    const r = await api("/answer", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({id: cur.id, choice}),
+    });
+    const btn = document.querySelector(`.opt[data-i="${choice}"]`);
+    const right = document.querySelector(`.opt[data-i="${r.correct_index}"]`);
+    if (right) right.classList.add("right");
+    if (!r.correct && btn) btn.classList.add("wrong");
+    const src = r.source ? `<div class="meta">${esc(r.source).slice(0, 300)}</div>` : "";
+    $("result").innerHTML = `
+      <div class="verdict ${r.correct ? "ok" : "ng"}">${r.correct ? "정답입니다." : "틀렸습니다. 정답: " + esc(r.correct_text)}</div>
+      <div class="expl">${esc(r.explanation)}</div>${src}
+      <div class="next"><button id="nx">다음 문제</button></div>`;
+    $("nx").addEventListener("click", next);
+    loadStats();
+  } catch (e) {
+    answered = false;
+    document.querySelectorAll(".opt").forEach((b) => b.disabled = false);
+    $("result").innerHTML = `<div class="err">채점 실패: ${esc(e.message)}</div>`;
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  $("m-all").classList.toggle("on", m === "all");
+  $("m-wrong").classList.toggle("on", m === "wrong");
+  cur = null;
+  next();
+}
+$("m-all").addEventListener("click", () => setMode("all"));
+$("m-wrong").addEventListener("click", () => setMode("wrong"));
+
+loadStats();
+next();
+</script>
+</body>
+</html>

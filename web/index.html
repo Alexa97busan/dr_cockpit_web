@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>정비산업기사 주관식</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<meta name="theme-color" content="#f5f5f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="정비 주관식">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<script>
+  tailwind.config = { theme: { extend: { fontFamily: { sans: ["Pretendard", "system-ui", "sans-serif"] } } } };
+</script>
+<style>
+  body { -webkit-tap-highlight-color: transparent; }
+  .card { touch-action: pan-y; will-change: transform; }
+  .sheet { z-index: 30; transform: translateY(105%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+  .sheet.open { transform: none; }
+  /* 해설: 화면 아래 시트 대신 문제 카드 안, 답 바로 아래에 펼쳐진다 */
+  #sheet.inline{position:relative;inset:auto;transform:none;max-height:none;overflow:visible;max-width:none;z-index:auto;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;border-top:1px solid #E2E8F0;padding:22px 0 0;margin:24px 0 0;animation:sheetIn .42s cubic-bezier(.2,.8,.2,1)}
+  #sheet.inline>div:first-child{display:none}
+  @keyframes sheetIn{from{opacity:0;transform:translate3d(0,-8px,0)}to{opacity:1;transform:none}}
+  .scrim { z-index: 29; opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  #world,#floor{display:none}
+  #worldPick button.on{background:#171717;color:#fff}
+
+  /* ---- 디자인: 각진 면, 겹쳐진 층, 얇은 유리 질감 (color/DESIGN.md 팔레트) ---- */
+  :root{--cobalt:#1040E8;--ink:#1E293B;--muted:#64748B;--steel:#8EA7C2;--paper:#FBFBFA}
+  body.atmos{background:linear-gradient(170deg,#DCE5EE 0%,#C8D6E5 100%);color:var(--ink)}
+  body.atmos::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .4  0 0 0 0 .45  0 0 0 0 .5  0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+  /* 모든 모서리는 직각 (동그란 점 LCD는 예외) */
+  *{border-radius:0!important}
+  #clockDots span{border-radius:50%!important}
+  /* 카드: 유리 한 장 + 뒤로 겹쳐진 종이 두 장(그림자로 만든 단단한 층) + 부드러운 깊이 그림자 */
+  #card{position:relative;
+    background-color:rgba(255,255,255,.8);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+    backdrop-filter:blur(20px) saturate(1.1);-webkit-backdrop-filter:blur(20px) saturate(1.1);
+    border:1px solid rgba(255,255,255,.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 8px 32px -4px rgba(16,64,232,.10),
+      0 2px 8px -2px rgba(30,41,59,.06);
+    transition:box-shadow .45s cubic-bezier(.2,.8,.2,1)}
+  #card:hover{box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 14px 40px -6px rgba(16,64,232,.16),
+      0 4px 12px -2px rgba(30,41,59,.08)}
+  /* 패널·시트·바: 같은 유리 질감, 층이 낮은 쪽 */
+  #sheet,#progress,#listPanel,#worldPick button{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+  #sheet{background:rgba(255,255,255,.86);border-top:1px solid rgba(255,255,255,.8);box-shadow:0 -10px 40px -8px rgba(16,64,232,.12)}
+  #progress{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.75);box-shadow:0 6px 20px -6px rgba(16,64,232,.14),inset 0 1px 0 rgba(255,255,255,.9)}
+  /* 버튼: 누르기 전에 살짝 떠오르고, 누르면 눌린다 */
+  button{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s cubic-bezier(.2,.8,.2,1),background-color .2s ease,color .2s ease}
+  button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(16,64,232,.32),inset 0 1px 0 rgba(255,255,255,.6)}
+  button:active:not(:disabled){transform:translateY(0) scale(.98);transition-duration:.08s}
+  button:focus-visible{outline:2px solid var(--cobalt);outline-offset:3px}
+  #submit:hover{background-color:#0C36C4}
+  #worldPick button{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.8);color:var(--ink)}
+  #worldPick button.on{background:var(--cobalt);color:#fff;border-color:var(--cobalt)}
+  #question{font-family:"Pretendard",system-ui,sans-serif;letter-spacing:-.01em}
+  #progNum,#pos,#clockDate{font-family:"Space Grotesk",ui-monospace,monospace;font-weight:600;letter-spacing:.02em}
+  #answerIn{background:rgba(255,255,255,.7);box-shadow:inset 0 1px 3px rgba(30,41,59,.08);border:1px solid rgba(142,167,194,.35)}
+  #answerIn:focus{border-color:var(--cobalt);box-shadow:0 0 0 3px rgba(16,64,232,.15)}
+  /* 로딩바 정지/재생 버튼: 로딩바 밖, 화면 왼쪽 아래에 따로 둔다 */
+  #loaderPause{position:fixed;left:10px;bottom:14px;z-index:5;width:40px;height:40px;padding:0;margin:0;font-size:16px;line-height:1;border-radius:50%;border:1px solid rgba(142,167,194,.45);background:#fff;color:#1E293B;box-shadow:0 8px 20px -10px rgba(16,64,232,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  @media (prefers-reduced-motion: reduce){button,#card{transition:none!important}}
+
+  #card{z-index:1}
+  #clock{background:#C8D6E5;border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 2px 6px rgba(30,41,59,.12),0 10px 24px -12px rgba(16,64,232,.28)}
+  #stage{position:relative}
+  .card-next{position:absolute;inset:0;z-index:0;pointer-events:none;padding:28px;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.6);box-shadow:0 8px 24px -10px rgba(16,64,232,.12);transform:translate3d(0,14px,0) scale(.96);opacity:.85}
+  #pile{position:relative;align-self:stretch;height:96px;margin-top:-14px;margin-left:12px;margin-right:12px;z-index:0}
+  .pile-side{position:absolute;top:0;height:70px;width:46%}
+  .pile-right{left:50%;--s:1;--tone:#1040E8}
+  .pile-left{right:50%;--s:-1;--tone:#8EA7C2}
+  .pile-side>div{position:absolute;left:0;right:0;top:0;height:50px;display:flex;align-items:center;padding:0 14px;cursor:pointer;font-size:12px;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgb(calc(255 - var(--d)*6),calc(255 - var(--d)*6),calc(252 - var(--d)*6));border:1px solid rgba(255,255,255,.85);border-left:3px solid var(--tone);box-shadow:0 6px 16px -8px rgba(16,64,232,.22);transform:translate3d(calc(var(--d)*3px),calc(var(--d)*3px),0) rotate(var(--r,0deg));transition:transform var(--pile-ms,500ms) cubic-bezier(.2,.8,.2,1),opacity .2s,background .2s;transition-delay:calc(var(--d)*28ms)}
+  .pile-side>div .pm{color:var(--tone);font-weight:700;margin-right:8px;font-family:"Space Grotesk",ui-monospace,monospace}
+  .pile-side>div:hover{background:#fff}
+  .pile-tag{position:absolute;top:74px;font-size:12px;color:#64748B;font-family:"Space Grotesk",ui-monospace,monospace;font-weight:600;white-space:nowrap;pointer-events:none}
+  .pile-right .pile-tag{left:0}
+  .pile-left .pile-tag{right:0;transition:opacity .2s}
+  .pile-right .pile-tag{transition:opacity .2s}
+  .pile-side{z-index:0}
+  .pile-side .pm{color:var(--tone);font-weight:700;margin-right:8px;font-family:"Space Grotesk",ui-monospace,monospace}
+  .pile-review{pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px}
+  .gauge{position:fixed;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:5}
+  .gauge-l{left:5px}
+  .gauge-r{right:5px}
+  .gauge-track{width:4px;height:180px;background:#CBD5E1;position:relative;overflow:hidden}
+  .gauge-fill{position:absolute;left:0;right:0;bottom:0;height:0%;background:#1040E8;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+  .gauge-r .gauge-fill{background:#1E293B}
+  .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:300px;margin-left:auto;margin-right:auto}
+  .dots[hidden]{display:none}
+  .dot{width:9px;height:9px;border-radius:50%!important;border:1.5px solid #8EA7C2;background:transparent;padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s}
+  .dot:hover{transform:scale(1.35)}
+  .dot.ok{background:#1040E8;border-color:#1040E8}
+  .dot.ng{background:#8EA7C2;border-color:#8EA7C2}
+  .dot.cur{box-shadow:0 0 0 3px rgba(16,64,232,.25);transform:scale(1.25)}
+  .edge-no{position:fixed;left:6px;top:24%;z-index:5;pointer-events:none;display:flex;flex-direction:column;align-items:center;font-family:"Space Grotesk",ui-monospace,monospace;color:#1040E8}
+  #bigNoV{font-size:30px;font-weight:700;line-height:1}
+  #bigNoT{font-size:10px;color:#64748B;margin-top:4px}
+  .edge-nav{position:fixed;top:68%;z-index:5;width:40px;height:40px;background:#fff;color:#1E293B;font-size:22px;line-height:1;box-shadow:0 8px 20px -10px rgba(16,64,232,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+  .edge-nav:hover{transform:translateY(-2px)}
+  .edge-nav:active{transform:scale(.96)}
+  .edge-nav-l{left:6px}
+  .edge-nav-r{right:6px}
+  .today{position:fixed;right:10px;bottom:14px;z-index:5;pointer-events:none;font-family:"Space Grotesk",ui-monospace,monospace;font-size:11px;font-weight:600;color:#64748B}
+  .choice{display:block;width:100%;text-align:left;padding:14px 16px;background:#fff;border:1px solid #E2E8F0;font-size:15px;color:#1E293B;transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s}
+  .choice:hover:not(:disabled){transform:translateY(-1px);border-color:#8EA7C2}
+  .choice:active:not(:disabled){transform:scale(.99)}
+  .choice:disabled{cursor:default}
+  .choice.pick{border-color:#1040E8}
+  .choice.right{background:#EEF3FF;border-color:#1040E8;font-weight:700;color:#1040E8}
+  .choice.wrong{color:#64748B;text-decoration:line-through;text-decoration-thickness:1px}
+  .gauge-txt{font-family:"Space Grotesk",ui-monospace,monospace;font-size:10px;font-weight:600;color:#64748B;writing-mode:vertical-rl;letter-spacing:.04em;white-space:nowrap}
+main.wide { max-width: 1200px !important; }
+.split { display: block; }
+main.wide .split { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+@media (min-width: 900px) {
+  main.wide .split { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .page-view { position: sticky; top: 16px; }
+}
+.page-frame { position: relative; background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.page-frame img { width: 100%; height: auto; display: block; }
+.page-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.ans-blur { position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(255, 255, 255, 0.35); border-radius: 4px; }
+.unblur .ans-blur { display: none; }
+</style>
+</head>
+<body class="min-h-dvh atmos font-sans text-[#1E293B] antialiased overflow-x-hidden">
+<div id="world" aria-hidden="true"></div>
+<div id="floor" aria-hidden="true"></div>
+
+<main id="main" class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-10 pt-5">
+  <div id="clock" class="mb-4 self-start   px-3 py-2 shadow-inner" aria-label="현재 시간">
+    <div id="clockDots" class="flex gap-[6px]"></div>
+    <div id="clockDate" class="mt-1.5 font-mono text-[10px] font-bold tracking-widest text-[#1E293B]/70"></div>
+  </div>
+  <div id="worldPick" class="mb-4 flex gap-1.5 self-start">
+    <button data-w="earth" class=" bg-white px-3 py-1.5 text-xs font-semibold">지구</button>
+    <button data-w="moon" class=" bg-white px-3 py-1.5 text-xs font-semibold">달</button>
+    <button data-w="space" class=" bg-white px-3 py-1.5 text-xs font-semibold">우주</button>
+  </div>
+  <header class="flex items-center justify-between gap-3">
+    <select id="subject" aria-label="과목" class="max-w-[62%]  bg-white px-3 py-2 text-sm outline-none"></select>
+    <div class="flex items-center gap-2">
+      <a id="diagLink" href="diagrams/diagrams_3d.html" class="bg-white px-3 py-2 text-sm font-semibold text-[#1040E8] active:scale-[.99]">3D 해설</a>
+      <button id="modeBtn" type="button" class=" bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">모드</button>
+      <button id="listBtn" class=" bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">목록</button>
+      <span id="pos" class="text-sm tabular-nums text-[#64748B]"></span>
+    </div>
+  </header>
+
+  <div id="split" class="split">
+  <aside id="pageView" class="page-view" hidden>
+    <div class="page-tools"><button id="blurToggle" type="button" class="bg-white px-3 py-1.5 text-xs font-semibold active:scale-[.99]">블러 끄기</button></div>
+    <div id="figures"></div>
+  </aside>
+  <div class="flex flex-1 flex-col items-center justify-center py-6">
+    <div id="stage" class="relative w-full">
+    <div id="cardNext" class="card-next" aria-hidden="true">
+      <p id="nextSet" class="text-xs text-[#64748B]"></p>
+      <p id="nextQ" class="mt-3 break-keep text-[17px] font-semibold text-[#1E293B]"></p>
+    </div>
+    <article id="card" class="card w-full  bg-white p-7">
+      <p id="set" class="text-xs text-[#64748B]"></p>
+      <p id="question" class="mt-4 break-keep text-[19px] font-semibold leading-relaxed"></p>
+
+      <button id="answerOpen" class="mt-8 w-full  border border-dashed border-stone-300 py-4 text-sm text-[#64748B] active:scale-[.99]">정답 쓰기 (눌러서 열기)</button>
+
+      <div id="choices" class="mt-8 space-y-2" hidden></div>
+
+      <div id="answerBox" class="mt-8" hidden>
+        <textarea id="answerIn" rows="4" placeholder="답을 적고 제출하세요"
+                  class="w-full resize-none  bg-stone-100 p-4 text-base outline-none focus:bg-stone-50"></textarea>
+        <button id="submit" class="mt-3 w-full  bg-[#1040E8] py-3 font-semibold text-white active:scale-[.99]">제출</button>
+      </div>
+
+      <div id="revealBox" class="mt-8" hidden>
+        <p class="text-xs text-[#64748B]">정답</p>
+        <p id="reveal" class="mt-1 whitespace-pre-wrap break-keep text-base leading-relaxed"></p>
+        <p id="revealNote" class="mt-2 text-xs text-amber-700" hidden></p>
+        <div id="fix" class="mt-4  border border-amber-300 bg-amber-50 p-3" hidden>
+          <p class="text-xs font-semibold text-amber-700">교차검증 교정답 · 원본 없음, 검수 필요</p>
+          <p id="fixText" class="mt-1 whitespace-pre-wrap break-keep text-base leading-relaxed"></p>
+        </div>
+      </div>
+    </article>
+    </div>
+    <div id="pile" hidden>
+      <div id="pileWrong" class="pile-side pile-left"><button id="pileWrongTag" class="pile-tag pile-review" type="button"></button></div>
+      <div id="pileRight" class="pile-side pile-right"><span id="pileRightTag" class="pile-tag"></span></div>
+    </div>
+
+    <div id="dots" class="dots mt-5" hidden></div>
+    <p id="hint" class="mt-6 text-xs text-[#64748B]">왼쪽으로 밀면 이전, 오른쪽으로 밀면 다음</p>
+    <button id="voice" class="mt-4  bg-white px-4 py-2 text-sm font-semibold active:scale-[.99]">정비소 모드 켜 줘</button>
+    <p id="status" role="status" class="mt-3 min-h-5 text-center text-sm text-[#64748B]"></p>
+  </div>
+  </div>
+</main>
+
+<div id="progress" class="pointer-events-none fixed left-0 top-0 z-30 w-44  bg-white/90 px-3 py-2 backdrop-blur will-change-transform">
+  <div class="mb-1.5 flex items-center justify-between text-[11px] tabular-nums text-[#64748B]">
+    <span id="progNum">0 / 0</span>
+    <span id="progSub">남은 0</span>
+  </div>
+  <div class="h-1.5 w-full overflow-hidden  bg-stone-200">
+    <div id="progFill" class="h-full  bg-[#1040E8] transition-[width] duration-500 ease-out" style="width:0%"></div>
+  </div>
+</div>
+<button id="loaderPause" type="button" aria-pressed="false" aria-label="캐릭터 일시정지">⏸</button>
+
+<div id="scrim" class="scrim fixed inset-0 bg-black/20"></div>
+<section id="sheet" aria-label="채점 결과"
+         class="sheet fixed inset-x-0 bottom-0 mx-auto max-h-[72dvh] max-w-xl overflow-y-auto rounded-t-3xl bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3">
+  <div class="mx-auto mb-4 h-1 w-10  bg-neutral-300"></div>
+  <div class="flex items-center justify-between">
+    <span id="chip" class="text-2xl font-bold"></span>
+    <button id="close" class="text-sm text-[#64748B]">닫기</button>
+  </div>
+  <div id="sections" class="mt-5 space-y-5"></div>
+  <button id="next" class="mt-8 w-full  bg-[#1040E8] py-3 font-semibold text-white">다음 문제</button>
+</section>
+
+<div id="bigNo" class="edge-no" aria-hidden="true"><span id="bigNoV"></span><small id="bigNoT"></small></div>
+<button id="navPrev" class="edge-nav edge-nav-l" type="button" aria-label="이전 문제">&lsaquo;</button>
+<button id="navNext" class="edge-nav edge-nav-r" type="button" aria-label="다음 문제">&rsaquo;</button>
+<div id="today" class="today" aria-hidden="true"></div>
+<div id="gaugeL" class="gauge gauge-l" aria-hidden="true"><div class="gauge-track"><div id="gaugeLFill" class="gauge-fill"></div></div><span id="gaugeLTxt" class="gauge-txt"></span></div>
+<div id="gaugeR" class="gauge gauge-r" aria-hidden="true"><div class="gauge-track"><div id="gaugeRFill" class="gauge-fill"></div></div><span id="gaugeRTxt" class="gauge-txt"></span></div>
+
+<section id="listPanel" class="fixed inset-0 z-40 overflow-y-auto bg-stone-100" hidden>
+  <div class="mx-auto max-w-xl px-4 pb-10 pt-5">
+    <div class="flex items-center justify-between gap-3">
+      <p class="text-lg font-bold">문제 목록</p>
+      <button id="listClose" class=" bg-white px-3 py-2 text-sm font-semibold">닫기</button>
+    </div>
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <p id="listScope" class="text-sm text-[#64748B]"></p>
+      <button id="listScopeBtn" class="bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">전체 보기</button>
+    </div>
+    <input id="listSearch" type="search" placeholder="문제 내용으로 찾기" aria-label="문제 찾기"
+           class="mt-3 w-full  bg-white px-4 py-3 text-sm outline-none">
+    <div id="listBody" class="mt-2"></div>
+  </div>
+</section>
+
+<script src="app.js?v=7"></script>
+</body>
+</html>

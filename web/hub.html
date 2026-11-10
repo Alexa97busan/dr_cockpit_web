@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DR 허브</title>
+<style>
+  :root{--ink:#1E293B;--muted:#64748B;--cobalt:#1040E8;--paper:#FBFBFA;--steel:#8EA7C2}
+  *{border-radius:0!important;box-sizing:border-box}
+  body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;background:linear-gradient(#dfe6ef,#c9d4e2);color:var(--ink);font-family:Pretendard,"Apple SD Gothic Neo",system-ui,sans-serif}
+  main{width:min(560px,100%)}
+  h1{font-size:20px;margin:0 0 6px}
+  p.sub{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .link{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 18px;background:var(--paper);border:1px solid rgba(255,255,255,.9);box-shadow:0 10px 24px -14px rgba(16,64,232,.35);color:var(--ink);text-decoration:none;margin-bottom:12px;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+  .link:hover{transform:translateY(-2px);box-shadow:0 16px 30px -14px rgba(16,64,232,.4)}
+  .link:active{transform:scale(.99)}
+  .link b{font-size:17px}
+  .link small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  .dot{width:8px;height:8px;background:#CBD5E1;flex:none}
+  .dot.on{background:var(--cobalt)}
+</style>
+</head>
+<body>
+<main>
+  <h1>DR 허브</h1>
+  <p class="sub">문제풀이와 웹채팅을 여기서 엽니다. 불이 켜진 곳이 실행 중입니다.</p>
+  <a class="link" href="index.html">
+    <span><b>자동차정비산업기사 문제풀이</b><small>문항 풀이 · 객관식 · 해설</small></span>
+    <span class="dot" id="dStudy"></span>
+  </a>
+  <a class="link" href="diagrams/diagrams_3d.html">
+    <span><b>3D 문제해설 다이어그램</b><small>단원별 3D 해설 뷰어 33종 (애커먼 조향·록업 클러치·증발가스 제어 포함)</small></span>
+    <span class="dot on"></span>
+  </a>
+</main>
+<script>
+  // 두 서버가 떠 있는지 확인한다 (응답 내용은 보지 않고 연결만 본다)
+  const probe = (url, id) => fetch(url, { mode: "no-cors", cache: "no-store" })
+    .then(() => document.getElementById(id).classList.add("on"))
+    .catch(() => {});
+  probe("http://127.0.0.1:8765/api/health", "dStudy");
+</script>
+</body>
+</html>

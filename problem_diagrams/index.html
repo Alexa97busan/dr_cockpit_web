@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>자동차정비산업기사 3D 문제해설 다이어그램 컬렉션</title>
+  <style>
+    :root {
+      --primary: #1040E8;
+      --secondary: #8EA7C2;
+      --surface: #F9F9FF;
+      --surface-container: #E7EEFF;
+      --on-surface: #111C2D;
+      --on-surface-variant: #444656;
+      --outline: #747688;
+      --bg-gradient: linear-gradient(135deg, #DCE5EE 0%, #C8D6E5 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Apple SD Gothic Neo", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--on-surface);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(142, 167, 194, 0.4);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      backdrop-filter: blur(12px);
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #0E1B2E;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--on-surface-variant);
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px -4px rgba(16, 64, 232, 0.08), 0 2px 8px -2px rgba(30, 41, 59, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px -6px rgba(15, 23, 42, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .card-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--surface-container);
+      color: #002CB5;
+      font-weight: 600;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #111C2D;
+    }
+
+    .card-source {
+      font-size: 0.8rem;
+      color: #64748B;
+      margin-bottom: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--on-surface-variant);
+      margin-bottom: 1rem;
+      flex-grow: 1;
+    }
+
+    .specs {
+      background: rgba(240, 243, 255, 0.8);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      border: 1px solid rgba(216, 227, 251, 0.8);
+    }
+
+    .specs-title {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .specs ul {
+      list-style-position: inside;
+      color: #334155;
+    }
+
+    .specs li {
+      margin-bottom: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Atmospheric Serenity 3D Collection</div>
+      <h1>자동차정비산업기사 문제해설 3D 다이어그램</h1>
+      <p class="subtitle">교사용 기출 및 예상문제 문항별 객체 위치 및 동작 메커니즘 시각화 도해</p>
+    </header>
+
+    <div class="grid">
+      <!-- 1. 현가장치 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 01</span>
+          <span class="card-tag">현가장치정비</span>
+        </div>
+        <h2 class="card-title">차체 4대 진동 모드</h2>
+        <div class="card-source">출처: 9.유압식전자제어 현가장치정비1 (문제 1~5번)</div>
+        <p class="card-desc">무게중심(CG)을 기준으로 차체에 가해지는 4대 3차원 기본 진동 모드(바운싱, 피칭, 롤링, 요잉)와 좌표축 관계를 시각화합니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>바운싱 (Bouncing): Z축 수직 상하 병진 진동</li>
+            <li>피칭 (Pitching): Y축 중심 앞뒤 진동</li>
+            <li>롤링 (Rolling): X축 중심 좌우 롤 진동</li>
+            <li>요잉 (Yawing): Z축 중심 평면 선회 진동</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2. 조향장치 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 02</span>
+          <span class="card-tag">조향장치정비</span>
+        </div>
+        <h2 class="card-title">R-MDPS 랙 앤 피니언 조향 기구</h2>
+        <div class="card-source">출처: 10.유압식전자제어 조향장치정비1 (문제 1, 2, 7, 8, 10번)</div>
+        <p class="card-desc">조향 휠 입력 토크가 토크/각도 센서를 거쳐 R-MDPS 전기모터 보조력과 함께 랙 샤프트 직선 운동으로 변환되는 동력 경로를 표현합니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>피니언 및 랙 기어 맞물림 원리</li>
+            <li>R-MDPS (랙 구동방식 감속기구)</li>
+            <li>비접촉형 조향 토크 & 조향각 센서</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3. 제동장치 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 03</span>
+          <span class="card-tag">제동장치정비</span>
+        </div>
+        <h2 class="card-title">ABS 4센서 4채널 시스템</h2>
+        <div class="card-source">출처: 11.전자제어공압식 제동장치정비1 (문제 1~3번)</div>
+        <p class="card-desc">마스터 실린더, ABS 유압 모듈레이터 & ECU, 4륜 개별 휠 스피드 센서 및 브레이크 캘리퍼의 유압/신호 제어 루프를 구성합니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>4센서 4채널 독립 유압 제어 방식</li>
+            <li>ABS 유압 모듈레이터 감압/유지/증압</li>
+            <li>차륜 속도 검출 및 록(Lock) 방지</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4. 디젤전자 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 04</span>
+          <span class="card-tag">디젤전자제어</span>
+        </div>
+        <h2 class="card-title">커먼레일 (CRDi) 고압 연료 라인</h2>
+        <div class="card-source">출처: 2.디젤전자제어장치정비1 (문제 1~3번)</div>
+        <p class="card-desc">저압 펌프에서 고압 펌프, 고압 축압용 커먼레일 파이프(압력센서/제한밸브 내장), 전자제어 인젝터 분사까지의 흐름을 나타냅니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>연료 전달 순서: 저압 $\to$ 고압 $\to$ 레일 $\to$ 인젝터</li>
+            <li>레일 압력 센서 (RPS) 및 압력제한밸브</li>
+            <li>피에조/솔레노이드 다단 정밀 분사</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5. 가솔린전자 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 05</span>
+          <span class="card-tag">가솔린전자제어</span>
+        </div>
+        <h2 class="card-title">ETC 스로틀 바디 및 흡기 분사</h2>
+        <div class="card-source">출처: 1.가솔린 전자제어장치정비1, 2</div>
+        <p class="card-desc">전자제어 스로틀 밸브(ETC), 흡기 매니폴드 압력(MAP) 센서, 흡기 밸브를 향한 포트 인젝터 분무 및 연소실 압축 행정을 보여줍니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>ETC 모터 구동 및 스로틀포지션센서(TPS)</li>
+            <li>MAP 센서 부압 측정 및 이론공연비(14.7:1)</li>
+            <li>흡기 포트 미립화 연료 분무 및 흡기 밸브</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6. 냉난방장치 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 06</span>
+          <span class="card-tag">냉난방장치정비</span>
+        </div>
+        <h2 class="card-title">HVAC 에어컨 4대 냉매 사이클</h2>
+        <div class="card-source">출처: 4.냉난방장치정비1 (문제 1, 3, 7~9번)</div>
+        <p class="card-desc">압축기, 응축기, 수액기/건조기, 팽창밸브(TXV), 증발기(블로어 모터)로 이어지는 고압/저압 냉매 상태 변화 사이클을 직관적으로 도해화합니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>압축기 (저온저압 기체 $\to$ 고온고압 기체)</li>
+            <li>응축기 (고온고압 기체 $\to$ 고온고압 액체)</li>
+            <li>팽창밸브 (고온고압 액체 $\to$ 저온저압 안개액)</li>
+            <li>증발기 (저온저압 액체 $\to$ 저온저압 기체/냉각)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 7. 통신장치 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 07</span>
+          <span class="card-tag">네트워크통신정비</span>
+        </div>
+        <h2 class="card-title">CAN 버스 네트워크 및 종단저항</h2>
+        <div class="card-source">출처: 5.네트워크통신장치정비1, 2 (예상문제2 5~7번)</div>
+        <p class="card-desc">차량 메인 백본 트위스티드 페어(CAN-High, CAN-Low)와 양단 120Ω 종단저항, 게이트웨이를 통한 제어기 상호 간 멀티마스터 통신망을 표현합니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>CAN-High / CAN-Low 차동 전압 전송</li>
+            <li>양 끝단 120Ω 종단저항 (합성저항 60Ω)</li>
+            <li>게이트웨이 모듈 및 멀티마스터 프로토콜</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 8. 변속기 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 08</span>
+          <span class="card-tag">자동변속기정비</span>
+        </div>
+        <h2 class="card-title">토크컨버터 내부 유체 순환</h2>
+        <div class="card-source">출처: 7.자동변속기정비 (문제 1~3번)</div>
+        <p class="card-desc">엔진 회전을 전달하는 펌프 임펠러, 변속기 입력축을 구동하는 터빈 러너, 오일 방향을 변환해 토크를 2~3배 증대시키는 스테이터 구조입니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>펌프 임펠러 $\to$ 터빈 $\to$ 스테이터 오일 순환</li>
+            <li>원웨이 스프래그 클러치 (스테이터 회전 제어)</li>
+            <li>스톨 포인트 및 토크 변환비 (2~3:1)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 9. 배출가스 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-num">UNIT 09</span>
+          <span class="card-tag">배출가스정비</span>
+        </div>
+        <h2 class="card-title">PCV 환원 및 DPF / SCR 후처리</h2>
+        <div class="card-source">출처: 3.배출가스장치정비1, 2 (문제 1~3, 7번)</div>
+        <p class="card-desc">크랭크케이스 블로바이가스(HC) PCV 환원 라인과 배기 매니폴드 후단 DPF(차압센서) 매연 포집 및 SCR 요소수(AdBlue) 질소산화물 정화 경로입니다.</p>
+        <div class="specs">
+          <div class="specs-title">핵심 학습 포인트</div>
+          <ul>
+            <li>PCV 밸브 블로바이가스(HC) 흡기 재순환</li>
+            <li>DPF 차압센서 전·후 압력차 측정 및 재생</li>
+            <li>SCR 요소수 분사를 통한 NOx 저감</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1878 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D 문제해설 다이어그램 뷰어 - DR COCKPIT</title>
+  <style>
+    :root {
+      --cobalt: #1040E8;
+      --cobalt-dark: #002CB5;
+      --steel: #8EA7C2;
+      --ink: #111C2D;
+      --muted: #444656;
+      --surface: #F9F9FF;
+      --surface-container: #E7EEFF;
+      --bg-gradient: linear-gradient(135deg, #DCE5EE 0%, #C8D6E5 100%);
+      --glass: rgba(255, 255, 255, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --shadow: 0 8px 32px -4px rgba(16, 64, 232, 0.08), 0 2px 8px -2px rgba(30, 41, 59, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Apple SD Gothic Neo", Pretendard, sans-serif;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+    }
+    .nav-back:hover {
+      background: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .header-text h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #0E1B2E;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cobalt);
+      background: var(--surface-container);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.04em;
+    }
+
+    .header-text p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      padding: 10px 14px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--cobalt);
+      color: #FFFFFF;
+    }
+
+    .guide-tip {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px -6px rgba(16, 64, 232, 0.15);
+    }
+
+    .card-top {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(142, 167, 194, 0.2);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .card-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cobalt);
+      letter-spacing: 0.05em;
+    }
+
+    .card-category {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(16, 64, 232, 0.08);
+      color: var(--cobalt-dark);
+      border-radius: 4px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111C2D;
+    }
+
+    .card-source {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* 이미지 뷰어 및 드롭존 */
+    .image-zone {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      background: #EAEFF5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(142, 167, 194, 0.2);
+    }
+
+    .image-zone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+
+    .image-zone:hover img {
+      transform: scale(1.03);
+    }
+
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(240, 245, 255, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border: 2px dashed var(--steel);
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .drop-overlay.has-image {
+      opacity: 0;
+    }
+
+    .image-zone:hover .drop-overlay.has-image {
+      opacity: 0.85;
+      background: rgba(17, 28, 45, 0.75);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .drop-overlay {
+      display: none !important;
+    }
+
+    .drop-overlay svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--cobalt);
+      margin-bottom: 8px;
+    }
+
+    .image-zone:hover .drop-overlay.has-image svg {
+      stroke: #FFFFFF;
+    }
+
+    .drop-text {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .drop-sub {
+      font-size: 11px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .card-body {
+      padding: 16px 18px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .key-points {
+      background: rgba(240, 243, 255, 0.75);
+      border: 1px solid rgba(216, 227, 251, 0.8);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .key-title {
+      font-weight: 700;
+      color: var(--cobalt);
+      margin-bottom: 4px;
+    }
+
+    .key-points ul {
+      list-style-position: inside;
+      color: #334155;
+    }
+
+    .key-points li {
+      margin-bottom: 2px;
+    }
+
+    /* 모달 라이트박스 */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 28, 45, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 1080px;
+      width: 100%;
+      background: #FFFFFF;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .zoom-wrap {
+      position: relative;
+      height: 75vh;
+      overflow: hidden;
+      background: #DCE5EE;
+      touch-action: none;
+      cursor: zoom-in;
+    }
+
+    .modal-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: 0 0;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .modal-hint {
+      font-size: 13px;
+      color: #5a6b80;
+      margin-right: 12px;
+      white-space: nowrap;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .modal-close {
+      padding: 6px 16px;
+      background: var(--cobalt);
+      color: #FFFFFF;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-text">
+        <h1>
+          3D 문제해설 다이어그램 뷰어
+          <span class="badge">Atmospheric Serenity</span>
+        </h1>
+        <p>채팅창의 3D 렌더링 이미지를 각 카드로 드래그하거나 클릭하여 로컬 캐시에 즉시 보관·열람할 수 있습니다.</p>
+      </div>
+      <a class="nav-back" href="../hub.html">
+        <span>← DR 허브로 이동</span>
+      </a>
+    </header>
+
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab-btn active" data-filter="all">전체 (40)</button>
+        <button class="tab-btn" data-filter="chassis">섀시계통 (23)</button>
+        <button class="tab-btn" data-filter="engine">엔진계통 (15)</button>
+        <button class="tab-btn" data-filter="electric">전기·통신 (2)</button>
+      </div>
+      <div class="guide-tip">
+        <span>💡 <b>Tip:</b> 채팅창의 이미지를 카드 영역으로 직접 끌어다 놓으면 영구 저장됩니다.</span>
+      </div>
+    </div>
+
+    <div class="grid" id="cardGrid">
+      <!-- 1. 현가장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 01</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">차체 4대 진동 모드</h2>
+          <div class="card-source">9.유압식전자제어 현가장치정비1 (문제 1~5번)</div>
+        </div>
+        <div class="image-zone" data-id="unit01_suspension">
+          <img id="img_unit01_suspension" alt="차체 4대 진동 모드" src="img/unit01_suspension.jpg">
+          <div class="drop-overlay has-image" id="drop_unit01_suspension">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">현가장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">무게중심(CG) 기준 3차원 축선(X, Y, Z)에 대한 회전 모멘트 및 상하 병진 진동 역학을 한눈에 비교합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>바운싱: Z축 수직 상하 운동 (요철 통과)</li>
+              <li>피칭: Y축 중심 앞뒤 진동 (방지턱, 급제동)</li>
+              <li>롤링: X축 중심 좌우 회전 (선회 및 비탈길)</li>
+              <li>요잉: Z축 중심 평면 선회 (미끄러짐 및 스핀)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 조향장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 02</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">R-MDPS 랙 앤 피니언 조향 기구</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비1 (문제 1, 2, 7, 8, 10번)</div>
+        </div>
+        <div class="image-zone" data-id="unit02_steering">
+          <img id="img_unit02_steering" alt="MDPS 조향 기구" src="img/unit02_steering.jpg">
+          <div class="drop-overlay has-image" id="drop_unit02_steering">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">조향장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">운전자 조향 입력 토크 검출부터 전동 모터 보조력을 통한 랙 샤프트 직선 변위 변환 과정을 도해화했습니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>피니언-랙 기어 기계적 감속 기구</li>
+              <li>R-MDPS 모터 랙축 직결 구동</li>
+              <li>비접촉식 토크 및 조향각 센서 계측</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 제동장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 03</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">ABS 4센서 4채널 시스템</h2>
+          <div class="card-source">11.전자제어공압식 제동장치정비1 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit03_brakes">
+          <img id="img_unit03_brakes" alt="ABS 제동 시스템" src="img/unit03_brakes.jpg">
+          <div class="drop-overlay has-image" id="drop_unit03_brakes">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">제동장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">4개 차륜의 휠 스피드 센서 피드백을 기반으로 ABS 유압 모듈레이터가 각 캘리퍼 유압을 독립 제어합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>4센서 4채널 완전 독립 유압 라인</li>
+              <li>감압 / 유지 / 증압 고속 솔레노이드 제어</li>
+              <li>차륜 록(Lock-up) 방지 및 조향성 유지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 디젤전자 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 04</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">커먼레일 (CRDi) 연료 시스템</h2>
+          <div class="card-source">2.디젤전자제어장치정비1 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit04_crdi">
+          <img id="img_unit04_crdi" alt="CRDi 연료 시스템" src="img/unit04_crdi.jpg">
+          <div class="drop-overlay has-image" id="drop_unit04_crdi">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">디젤전자 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">연료탱크 저압 펌프 $\to$ 고압 펌프 $\to$ 커먼레일 파이프 $\to$ 고압 인젝터로 이어지는 연료 이송 순서를 보여줍니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>저압 펌프 $\to$ 고압 펌프 $\to$ 레일 $\to$ 인젝터</li>
+              <li>레일 압력 센서 (RPS) 및 압력 제한 밸브</li>
+              <li>다단 분사(파일럿/주분사/포스트분사)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 가솔린전자 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 05</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">ETC 스로틀 바디 및 흡기 분사</h2>
+          <div class="card-source">1.가솔린 전자제어장치정비1, 2</div>
+        </div>
+        <div class="image-zone" data-id="unit05_gasoline">
+          <img id="img_unit05_gasoline" alt="가솔린 흡기 분사" src="img/unit05_gasoline.jpg">
+          <div class="drop-overlay has-image" id="drop_unit05_gasoline">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">가솔린전자 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">전자식 스로틀 밸브 개도량과 MAP 센서 압력에 따라 인젝터가 흡기 밸브를 향해 미립화 연료를 분사합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>ETC 모터 구동 및 TPS 듀얼 센서</li>
+              <li>흡기 매니폴드 부압(MAP) 및 공기량 계측</li>
+              <li>이론공연비(14.7:1) 혼합기 형성</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. 냉난방장치 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 06</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">HVAC 에어컨 4대 냉매 사이클</h2>
+          <div class="card-source">4.냉난방장치정비1 (문제 1, 3, 7~9번)</div>
+        </div>
+        <div class="image-zone" data-id="unit06_hvac">
+          <img id="img_unit06_hvac" alt="HVAC 냉매 사이클" src="img/unit06_hvac.jpg">
+          <div class="drop-overlay has-image" id="drop_unit06_hvac">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">냉난방장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">압축기, 응축기, 팽창밸브(TXV), 증발기 사이에서 고압/저압 냉매의 기화·액화 열교환 원리를 나타냅니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>압축기: 저온저압 기체 $\to$ 고온고압 기체</li>
+              <li>응축기: 고온고압 기체 $\to$ 고온고압 액체</li>
+              <li>팽창밸브(TXV): 고압 액체 $\to$ 저압 미무액</li>
+              <li>증발기: 저압 액체 기화열 흡수(실내 냉각)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. 통신장치 -->
+      <div class="card" data-cat="electric">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 07</span>
+            <span class="card-category">전기·통신</span>
+          </div>
+          <h2 class="card-title">CAN 버스 및 종단저항 (120Ω)</h2>
+          <div class="card-source">5.네트워크통신장치정비1, 2 (예상문제2 5~7번)</div>
+        </div>
+        <div class="image-zone" data-id="unit07_can">
+          <img id="img_unit07_can" alt="CAN 버스 통신망" src="img/unit07_can.jpg">
+          <div class="drop-overlay has-image" id="drop_unit07_can">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">통신장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">트위스티드 페어 차동 신호 버스 양 끝단의 120Ω 종단저항과 게이트웨이를 통한 제어기 통신 구조입니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>CAN-H / CAN-L 트위스티드 페어 노이즈 상쇄</li>
+              <li>양단 120Ω 종단저항 (합성 저항 60Ω)</li>
+              <li>중앙 게이트웨이 및 멀티마스터 프로토콜</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. 변속기 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 08</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">토크컨버터 내부 유체 순환</h2>
+          <div class="card-source">7.자동변속기정비 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit08_transmission">
+          <img id="img_unit08_transmission" alt="토크컨버터 유체 순환" src="img/unit08_transmission.jpg">
+          <div class="drop-overlay has-image" id="drop_unit08_transmission">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">변속기 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">엔진 구동 펌프 임펠러와 터빈 사이에서 원웨이 클러치 스테이터가 오일 방향을 변환해 토크를 증대합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>펌프 $\to$ 터빈 $\to$ 스테이터 유체 소용돌이 순환</li>
+              <li>원웨이 스프래그 클러치 역회전 방지</li>
+              <li>스톨 구간 최대 2~3배 토크 변환비</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. 배출가스 -->
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 09</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">PCV 환원 및 DPF / SCR 후처리</h2>
+          <div class="card-source">3.배출가스장치정비1, 2 (문제 1~3, 7번)</div>
+        </div>
+        <div class="image-zone" data-id="unit09_emissions">
+          <img id="img_unit09_emissions" alt="배출가스 후처리 시스템" src="img/unit09_emissions.jpg">
+          <div class="drop-overlay has-image" id="drop_unit09_emissions">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">배출가스 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">크랭크케이스 블로바이가스(HC) 재순환 루프와 배기 매니폴드 DPF 차압센서 및 SCR 요소수 분사 회로입니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>PCV 밸브 블로바이가스 흡기 포트 환원</li>
+              <li>DPF 전후단 차압센서 매연 포집량 산출</li>
+              <li>SCR 요소수(AdBlue) 분사를 통한 질소산화물 환원</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. 휠 얼라인먼트 4대 기하각 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 10</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">휠 얼라인먼트 4대 기하각 (캠버·캐스터·KPI·토인)</h2>
+          <div class="card-source">9.현가장치 / 10.조향장치 공통 (쏠림·직진 복원력·핸들 흔들림)</div>
+        </div>
+        <div class="image-zone" data-id="unit10_alignment">
+          <img id="img_unit10_alignment" alt="휠 얼라인먼트 4대 기하각" src="img/image10.png">
+          <div class="drop-overlay has-image" id="drop_unit10_alignment">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">휠 얼라인먼트 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">정면·측면·상면 시선을 반투명 글래스 기준면으로 나눠, 네 요소의 기준축과 기울기 각도를 한눈에 비교합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>캠버: 정면(YZ) 바퀴 중심선과 수직선이 이루는 각도</li>
+              <li>캐스터: 측면(XZ) 조향축(스트럿)의 전후 기울기</li>
+              <li>킹핀 경사각(KPI/SAI): 너클 축의 안쪽 기울기, 복원력 발생</li>
+              <li>토인: 상면(XY)에서 앞바퀴 간격이 뒤쪽보다 좁은 형상</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. 유성기어장치 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 11</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">자동변속기 유성기어장치 동력 전달</h2>
+          <div class="card-source">7.자동변속기정비 (변속비·변속단 제어 문항)</div>
+        </div>
+        <div class="image-zone" data-id="unit11_planetary">
+          <img id="img_unit11_planetary" alt="유성기어장치 동력 전달 구조" src="img/image11.png">
+          <div class="drop-overlay has-image" id="drop_unit11_planetary">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">유성기어 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">선 기어, 유성 기어(캐리어), 링 기어가 동심축 상에서 맞물리는 분해도로, 고정 요소와 입력 요소에 따른 동력 흐름을 보여줍니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>선 기어(중심) · 유성 기어/캐리어(중간) · 링 기어(외곽)</li>
+              <li>고정 요소와 입력 요소 조합에 따른 감속·증속·직결</li>
+              <li>고정 요소에 따른 회전 방향 역전(후진) 원리</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. MDPS 구동방식 비교 -->
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 12</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">MDPS 모터 구동 3대 방식 (C / P / R)</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비1 (문제 7~9번)</div>
+        </div>
+        <div class="image-zone" data-id="unit12_mdps">
+          <img id="img_unit12_mdps" alt="MDPS 모터 구동 방식 비교" src="img/image12.png">
+          <div class="drop-overlay has-image" id="drop_unit12_mdps">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">MDPS 구동방식 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">같은 조향 기구에서 보조 전동 모터가 장착되는 위치와 감속 기구의 차이를 나란히 비교합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>C-MDPS: 실내 조향 컬럼축에 모터 장착 (소형차, 공간 효율)</li>
+              <li>P-MDPS: 기어박스 피니언 축에 모터 장착 (중형차)</li>
+              <li>R-MDPS: 랙 샤프트에 모터 직결 (대형·고급차, 정밀 응답성)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 13</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">상용차 공기 브레이크 전체 계통도</h2>
+          <div class="card-source">11.전자제어공압식 제동장치정비1 (문제 6~8번)</div>
+        </div>
+        <div class="image-zone" data-id="unit13_airbrake">
+          <img id="img_unit13_airbrake" alt="상용차 공기 브레이크 계통도" src="img/image13.png">
+          <div class="drop-overlay has-image" id="drop_unit13_airbrake">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">상용차 공기 브레이크 전체 계통도 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">엔진 구동 공기 압축기에서 시작해 탱크·브레이크 밸브·릴레이 밸브를 거쳐 차륜 브레이크 챔버와 S-캠까지 이어지는 공기 흐름을 한 번에 봅니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>언로더 밸브: 규정 압력(5~7kg/cm²) 도달 시 압축기를 무부하 운전</li>
+              <li>안전밸브: 탱크 초과압(20bar) 방출</li>
+              <li>공기탱크: 압력 유지 및 제동 공기 저장</li>
+              <li>브레이크 챔버 + S-캠: 공압으로 캠을 돌려 라이닝을 확장</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 14</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">판 스프링 & 섀클 스팬 변화 기구</h2>
+          <div class="card-source">9.유압식전자제어 현가장치정비2 (문제 1~3, 13번)</div>
+        </div>
+        <div class="image-zone" data-id="unit14_leafspring">
+          <img id="img_unit14_leafspring" alt="판 스프링과 섀클 스팬 변화 기구" src="img/image14.png">
+          <div class="drop-overlay has-image" id="drop_unit14_leafspring">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">판 스프링 & 섀클 스팬 변화 기구 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">하중으로 판 스프링이 휘면 앞쪽 스프링 아이 핀을 기준으로 뒤쪽 섀클이 회전하며, 스팬(앞뒤 고정점 거리) 신장 변화를 흡수합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>스팬(Span): 스프링 앞뒤 중심 거리</li>
+              <li>스프링 아이: 고정 핀 기준 회전 중심</li>
+              <li>섀클(Shackle): 스팬 길이 변화를 수용하는 회전 링크</li>
+              <li>하중이 커질수록 섀클이 기울며 스팬이 늘어남</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 15</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">VVT 유압 캠 페이저 & 밸브 오버랩</h2>
+          <div class="card-source">3.배출가스장치정비2 (문제 8~9번)</div>
+        </div>
+        <div class="image-zone" data-id="unit15_vvt">
+          <img id="img_unit15_vvt" alt="VVT 캠 페이저와 밸브 오버랩" src="img/image15.png">
+          <div class="drop-overlay has-image" id="drop_unit15_vvt">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">VVT 유압 캠 페이저 & 밸브 오버랩 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">OCV로 유로를 바꿔 캠샤프트 스프로킷의 베인 로터를 돌리면 흡기 밸브 개폐 시기가 진각되고, 상사점 부근에서 배기 밸브와 함께 열리는 오버랩이 생깁니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>OCV: 오일 유로를 바꿔 페이저 위치 제어</li>
+              <li>베인 로터: 유압으로 캠 위상을 진각·지각</li>
+              <li>밸브 오버랩: 상사점 부근 흡·배기 동시 개방 구간</li>
+              <li>내부 EGR: 오버랩 구간의 배기가스가 연소실에 잔류</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 16</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">크랭크각 센서 (인덕티브 방식)</h2>
+          <div class="card-source">가솔린전자제어2 (문제 1번)</div>
+        </div>
+        <div class="image-zone" data-id="unit16_crank">
+          <img id="img_unit16_crank" alt="크랭크각 센서와 릴럭터 타겟 휠 신호" src="img/image16.png">
+          <div class="drop-overlay has-image" id="drop_unit16_crank">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">크랭크각 센서 (인덕티브 방식) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">릴럭터 타겟 휠의 이빨이 센서 앞을 지나며 교류 신호를 만들고, 결손 이빨(Missing tooth) 위치가 상사점(TDC) 기준점이 됩니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>인덕티브 마그네틱 픽업: 자석 코어와 코일로 교류 전압 발생</li>
+              <li>릴럭터 타겟 휠: 이빨 간격으로 회전속도 판별</li>
+              <li>결손 이빨: 기준 펄스로 상사점과 실린더 위치 인식</li>
+              <li>회전이 빠를수록 파형 진폭과 주파수 증가</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 17</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">맥퍼슨 스트럿 vs 더블 위시본(SLA)</h2>
+          <div class="card-source">현가장치정비2 (문제 8~9번)</div>
+        </div>
+        <div class="image-zone" data-id="unit17_geometry">
+          <img id="img_unit17_geometry" alt="맥퍼슨 스트럿과 더블 위시본 현가 기하학 비교" src="img/image17.png">
+          <div class="drop-overlay has-image" id="drop_unit17_geometry">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">맥퍼슨 스트럿 vs 더블 위시본(SLA) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">맥퍼슨 스트럿은 스트럿 일체형으로 단순하고, 더블 위시본(SLA)은 위·아래 암의 길이 차이로 캠버 변화를 보정합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>맥퍼슨 스트럿: 쇼크업소버와 코일이 일체형, 구조가 단순</li>
+              <li>더블 위시본(SLA): 어퍼암이 로워암보다 짧아 주행 중 부(-) 캠버 증가</li>
+              <li>어퍼암과 로워암 길이 비율로 캠버 변화량 설계</li>
+              <li>스트럿 방식은 공간 효율, 위시본 방식은 접지 안정성 우수</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 18</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">지르코니아(ZrO₂) 산소센서</h2>
+          <div class="card-source">배출가스정비2 (문제 1~3번)</div>
+        </div>
+        <div class="image-zone" data-id="unit18_o2sensor">
+          <img id="img_unit18_o2sensor" alt="지르코니아 산소센서 단면과 기전력 곡선" src="img/image18.png">
+          <div class="drop-overlay has-image" id="drop_unit18_o2sensor">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">지르코니아(ZrO₂) 산소센서 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">배기 중 산소 농도차에 따라 지르코니아 세라믹 양면 백금 전극 사이에 기전력이 생기며, 이론 공연비 부근에서 전압이 급변합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>농담 전지 원리: 배기·대기 산소 농도차로 0.1~0.9V 발생</li>
+              <li>백금 전극 코팅: 지르코니아 표면에서 기전력 집전</li>
+              <li>내부 히터: 저온에서도 활성 온도 유지</li>
+              <li>농후(0.9V 근처)·희박(0.1V 근처) 판별로 공연비 피드백 제어</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 19</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">차동 기어장치 선회 동력 전달</h2>
+          <div class="card-source">섀시 동력전달장치 (선회 시 구동력 배분)</div>
+        </div>
+        <div class="image-zone" data-id="unit19_diff">
+          <img id="img_unit19_diff" alt="차동 기어장치 선회 시 회전 벡터" src="img/image19.png">
+          <div class="drop-overlay has-image" id="drop_unit19_diff">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">차동 기어장치 선회 동력 전달 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">구동 피니언에서 링 기어, 차동 케이스로 이어진 회전력이 선회 시 차동 피니언의 자전과 공전으로 외측 바퀴를 내측보다 빠르게 돌립니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>구동 피니언 → 링 기어 → 차동 케이스 순서로 회전력 전달</li>
+              <li>직진 시: 차동 피니언이 자전하지 않아 좌우 바퀴 회전수 동일</li>
+              <li>선회 시: 차동 피니언이 자전하며 외측 사이드 기어 회전 증가</li>
+              <li>내측 바퀴는 같은 양만큼 감속되어 속도차 흡수</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 20</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">전자제어 가변용량 터보차저 (VGT)</h2>
+          <div class="card-source">디젤전자제어장치정비1 (문제 8번)</div>
+        </div>
+        <div class="image-zone" data-id="unit20_vgt">
+          <img id="img_unit20_vgt" alt="VGT 가변 노즐 베인과 과급 기구" src="img/image20.png">
+          <div class="drop-overlay has-image" id="drop_unit20_vgt">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">전자제어 가변용량 터보차저 (VGT) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">유니슨 링이 가변 노즐 베인 각도를 바꿔 배기 유속을 조절하며, 저속에서는 베인을 닫아 과급압을 높이고 고속에서는 열어 배압을 낮춥니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>전동식 액추에이터가 유니슨 링을 회전시켜 베인 각도 조절</li>
+              <li>저속: 베인을 닫아 배기 유속 증가, 과급 효율 향상</li>
+              <li>고속: 베인을 열어 배압 감소, 과급 과다 방지</li>
+              <li>컴프레서 임펠러로 공기를 강하게 압축해 공급</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 21</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">드가르봉식 단통형 쇽업소버</h2>
+          <div class="card-source">유압식전자제어 현가장치정비1 (문제 15번)</div>
+        </div>
+        <div class="image-zone" data-id="unit21_degarbon">
+          <img id="img_unit21_degarbon" alt="드가르봉식 단통형 쇽업소버 단면" src="img/image21.png">
+          <div class="drop-overlay has-image" id="drop_unit21_degarbon">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">드가르봉식 단통형 쇽업소버 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">프리 피스톤이 작동 오일실과 고압 질소가스실을 분리하고, 피스톤 오리피스의 유압 저항이 감쇠력을 만들며 고압 가스가 캐비테이션을 막습니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>프리 피스톤: 오일실과 질소가스실을 완전 분리</li>
+              <li>고압 질소가스(약 20~30bar): 오일 기포(캐비테이션) 발생 방지</li>
+              <li>피스톤 밸브 오리피스: 유압 저항으로 감쇠력 발생</li>
+              <li>단통 구조라 방열성과 감쇠 안정성이 우수</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 22</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">스테빌라이저 바 (롤링 억제)</h2>
+          <div class="card-source">9.유압식전자제어 현가장치정비1 (문제 16번)</div>
+        </div>
+        <div class="image-zone" data-id="unit22_swaybar">
+          <img id="img_unit22_swaybar" alt="스테빌라이저 바 토션 바 비틀림" src="img/image22.png">
+          <div class="drop-overlay has-image" id="drop_unit22_swaybar">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">스테빌라이저 바 (롤링 억제) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">한쪽 바퀴가 턱을 넘어 서스펜션이 압축되면 U자형 토션 바가 비틀리며 복원 모멘트가 생겨 반대쪽 바퀴를 함께 당겨 차체 롤링을 억제합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>서브프레임에 부싱으로 지지된 U자형 토션 바 구조</li>
+              <li>한쪽 압축 시 토션 바에 비틀림 탄성 모멘트 발생</li>
+              <li>반대쪽 바퀴를 끌어 올려 좌우 높이 차이 감소</li>
+              <li>직진 안정성은 높이고 승차감은 크게 해치지 않음</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 23</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">파스칼의 원리 (유압 브레이크)</h2>
+          <div class="card-source">11.전자제어공압식 제동장치정비2 (문제 2번)</div>
+        </div>
+        <div class="image-zone" data-id="unit23_pascal">
+          <img id="img_unit23_pascal" alt="파스칼의 원리 유압 브레이크 배력 구조" src="img/image23.png">
+          <div class="drop-overlay has-image" id="drop_unit23_pascal">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">파스칼의 원리 (유압 브레이크) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">밀폐된 브레이크 오일 라인에서 마스터 실린더 압력 P = F₁/A₁이 그대로 전달되어, 큰 단면적 캘리퍼 피스톤에서 F₂ = P × A₂만큼 증폭된 제동력이 나옵니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>P = F₁ / A₁ = F₂ / A₂ (밀폐 유체 내 압력 동일)</li>
+              <li>마스터 실린더 작은 단면적(A₁): 페달 힘을 압력으로 변환</li>
+              <li>캘리퍼 큰 단면적(A₂): 압력을 큰 제동력으로 증폭</li>
+              <li>면적비가 클수록 같은 페달 힘에 큰 제동력 발생</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 24</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">자동변속기 밸브바디 & 다판 습식 클러치</h2>
+          <div class="card-source">7.자동변속기정비 (유압 제어 라인 및 변속 솔레노이드 밸브)</div>
+        </div>
+        <div class="image-zone" data-id="unit24_clutch">
+          <img id="img_unit24_clutch" alt="밸브바디와 다판 습식 클러치 체결 구조" src="img/image24.png">
+          <div class="drop-overlay has-image" id="drop_unit24_clutch">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">자동변속기 밸브바디 & 다판 습식 클러치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">솔레노이드 밸브가 유로를 열면 어플라이 피스톤이 리턴 스프링을 누르고, 교대로 배치된 마찰판과 스틸판을 압착해 동력을 단속합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>밸브 바디: 미로형 오일 유로로 솔레노이드 밸브 작동 유압 분배</li>
+              <li>어플라이 피스톤: 유압으로 밀어 마찰판 압착</li>
+              <li>리턴 스프링: 유압 해제 시 피스톤 복귀</li>
+              <li>마찰판과 스틸판 교대 배치로 큰 토크 전달</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 25</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">삼원촉매 변환기 내부 반응</h2>
+          <div class="card-source">3.배출가스장치정비 (삼원촉매 귀금속 반응 및 배출가스 규제)</div>
+        </div>
+        <div class="image-zone" data-id="unit25_twc">
+          <img id="img_unit25_twc" alt="삼원촉매 허니컴 담체와 귀금속 코팅" src="img/image25.png">
+          <div class="drop-overlay has-image" id="drop_unit25_twc">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">삼원촉매 변환기 내부 반응 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">세라믹 허니컴 담체에 코팅된 백금(Pt), 팔라듐(Pd), 로듐(Rh)이 CO, HC는 산화시키고 NOx는 환원시켜 CO₂, H₂O, N₂로 정화합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>허니컴 담체: 표면적을 넓혀 귀금속 접촉 면적 확보</li>
+              <li>Pt·Pd: CO와 HC를 산화 (CO₂, H₂O 생성)</li>
+              <li>Rh: NOx를 환원 (N₂ 생성)</li>
+              <li>이론 공연비 부근에서 3원 정화 효율이 가장 높음</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 26</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">조향 로터리 제어 밸브 & 안전 체크 밸브</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비1 (문제 1번 안전 체크 밸브, 문제 2번 조향 조작력 유로 제어)</div>
+        </div>
+        <div class="image-zone" data-id="unit26_rotary">
+          <img id="img_unit26_rotary" alt="로터리 제어 밸브와 안전 체크 밸브 구조" src="img/image26.png">
+          <div class="drop-overlay has-image" id="drop_unit26_rotary">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">조향 로터리 제어 밸브 & 안전 체크 밸브 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">핸들 조작 시 토션 바가 비틀려 스풀과 슬리브 홈이 엇갈리며 파워 실린더 유로를 바꾸고, 펌프 고장 시에는 안전 체크 밸브가 수동 조향 경로를 열어 줍니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>토션 바: 핸들 토크에 비례해 미세하게 비틀림</li>
+              <li>스풀과 슬리브의 홈 엇갈림으로 오일 유로 절환</li>
+              <li>엔진 정지·펌프 고장 시 안전 체크 밸브가 바이패스 유로 개방</li>
+              <li>운전자가 수동으로 조향할 수 있도록 보장</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 27</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">매니폴드 게이지 세트 회로 연결</h2>
+          <div class="card-source">4.냉난방장치정비1 (에어컨 압력 측정, 진공 작업 및 냉매 충전 회로)</div>
+        </div>
+        <div class="image-zone" data-id="unit27_gauge">
+          <img id="img_unit27_gauge" alt="매니폴드 게이지 세트 3색 호스 연결" src="img/image27.png">
+          <div class="drop-overlay has-image" id="drop_unit27_gauge">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">매니폴드 게이지 세트 회로 연결 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">저압 게이지(파랑)는 L 포트, 고압 게이지(빨강)는 H 포트에 연결하고, 중앙 서비스 호스(노랑)는 진공 펌프나 냉매 충전기로 연결합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>저압 게이지(파랑) → 저압 흡입 포트(L)</li>
+              <li>고압 게이지(빨강) → 고압 토출 포트(H)</li>
+              <li>중앙 서비스 호스(노랑) → 진공 펌프 또는 냉매 충전기</li>
+              <li>사이트 글래스로 냉매 흐름과 상태 확인, 핸들 밸브로 개폐</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="electric">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 28</span>
+            <span class="card-category">전기·통신</span>
+          </div>
+          <h2 class="card-title">CAN 차동 전압 파형 (우성 vs 열성)</h2>
+          <div class="card-source">5.네트워크통신장치정비1 문제 9번 (전압 존재 시 우성 0, 전압 미존재 시 열성 1 판단)</div>
+        </div>
+        <div class="image-zone" data-id="unit28_can_diff">
+          <img id="img_unit28_can_diff" alt="CAN-H와 CAN-L 차동 전압 파형" src="img/image28.png">
+          <div class="drop-overlay has-image" id="drop_unit28_can_diff">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">CAN 차동 전압 파형 (우성 vs 열성) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">CAN-H와 CAN-L 차동 전압으로 비트를 판단합니다. 우성(0)은 차동 2.0V, 열성(1)은 차동 0V입니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>열성(Bit 1): CAN-H·CAN-L 모두 2.5V 대기, 차동 전압 0V</li>
+              <li>우성(Bit 0): CAN-H 3.5V 상승, CAN-L 1.5V 하강, 차동 전압 2.0V</li>
+              <li>트랜시버를 거쳐 오실로스코프에 디지털 파형으로 출력</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 29</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">HLA 유압 밸브 간극 조절기</h2>
+          <div class="card-source">1.가솔린 전자제어장치정비 밸브 동력전달 기구 및 간극 제어 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit29_hla">
+          <img id="img_unit29_hla" alt="HLA 유압 밸브 간극 조절기 단면" src="img/image29.png">
+          <div class="drop-overlay has-image" id="drop_unit29_hla">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">HLA 유압 밸브 간극 조절기 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">캠 로브가 롤러 로커 암을 누를 때 오일 갤러리의 엔진 오일이 체크 볼을 지나 고압실을 채웁니다. 비압축성 오일로 밸브 간극을 0으로 유지합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>경로: 오일 갤러리 → 체크 볼 → 고압실</li>
+              <li>오일의 비압축성으로 밸브 스템과의 간극 0 유지</li>
+              <li>태핏 소음과 밸브 타이밍 오차 방지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 30</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">히트펌프 사방밸브 냉난방 전환</h2>
+          <div class="card-source">4.냉난방장치정비1 친환경차 공조 시스템 및 열펌프 순환 회로</div>
+        </div>
+        <div class="image-zone" data-id="unit30_heatpump">
+          <img id="img_unit30_heatpump" alt="히트펌프 사방밸브 냉난방 전환 회로" src="img/image30.png">
+          <div class="drop-overlay has-image" id="drop_unit30_heatpump">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">히트펌프 사방밸브 냉난방 전환 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">인버터 전동 압축기에서 토출된 고온·고압 냉매를 솔레노이드와 슬라이더 스풀이 4-Way 사방밸브에서 유로 전환합니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>냉방 모드: 실외 응축기로 보내 외부로 방열</li>
+              <li>난방 모드: 실내 응축기로 전환, 엔진 열원 없이 실내 온풍 공급</li>
+              <li>청색/적색 유로선으로 냉방·난방 경로 구분</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 31</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">애커먼 조향 기하학 (선회 시 좌우 조향각)</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비 선회 시 좌우 바퀴 조향각 관계 및 사이드 슬립 방지 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit31_ackermann">
+          <img id="img_unit31_ackermann" alt="애커먼 조향 기하학 선회 중심 투영" src="img/image31.png">
+          <div class="drop-overlay has-image" id="drop_unit31_ackermann">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">애커먼 조향 기하학 (선회 시 좌우 조향각) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">선회 시 안쪽 바퀴의 선회 반경이 작아 안쪽 조향각(θi)이 바깥쪽 조향각(θo)보다 항상 크게 꺾여야 합니다. 두 앞바퀴 회전축 연장선은 후륜 차축 중심선 연장선상의 순간 선회 중심(Instantaneous Center of Rotation)에서 만납니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>θi(내측 조향각) > θo(외측 조향각): 안쪽 바퀴가 더 크게 꺾임</li>
+              <li>축거(Wheelbase, L)·윤거(Track Width, K)로 선회 중심 위치 결정</li>
+              <li>좌우 조향각 관계가 맞지 않으면 사이드 슬립 발생</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 32</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">토크컨버터 록업 댐퍼 클러치 직결</h2>
+          <div class="card-source">7.자동변속기정비 유체 슬립 손실 방지 및 댐퍼 클러치 직결 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit32_lockup">
+          <img id="img_unit32_lockup" alt="토크컨버터 분해도 프런트 커버 록업 댐퍼 클러치 임펠러 터빈 스테이터" src="img/image32.png">
+          <div class="drop-overlay has-image" id="drop_unit32_lockup">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">토크컨버터 록업 댐퍼 클러치 직결 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">정속·고속 주행 시 록업 작동 압력으로 록업 클러치 플레이트를 프런트 커버에 압착해 임펠러(펌프)와 터빈을 1:1로 기계 직결합니다. 유체 슬립 손실이 없어 연비가 좋아집니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>직결: 록업 댐퍼 클러치가 프런트 커버에 압착되어 펌프 임펠러와 터빈을 기계 연결</li>
+              <li>3요소 구성: 펌프 임펠러(Pump Impeller) · 터빈 러너(Turbine Runner) · 스테이터(Stator)</li>
+              <li>오일 흐름: 펌프 → 터빈 → 스테이터 → 펌프 순환 (직결 시 유체 순환 없음)</li>
+              <li>록업 댐퍼 클러치의 스프링이 폭발 행정의 비틀림 진동 흡수</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 33</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">증발가스 제어장치 (캐니스터·PCSV)</h2>
+          <div class="card-source">1.가솔린 전자제어장치정비 / 배출가스정비 탄화수소(HC) 증발가스 포집 및 퍼지 제어 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit33_evap">
+          <img id="img_unit33_evap" alt="증발가스 제어 회로 캐니스터와 PCSV" src="img/image33.png">
+          <div class="drop-overlay has-image" id="drop_unit33_evap">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">증발가스 제어장치 (캐니스터·PCSV) 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">연료 탱크에서 증발한 HC 가스를 대기로 방출하지 않고 활성탄 캐니스터에 흡착합니다. 시동 후 ECU가 PCSV 듀티율을 조절해 흡기 서지탱크로 보내 연소실에서 재연소시킵니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>포집: 연료 탱크 → 활성탄 캐니스터 임시 흡착</li>
+              <li>퍼지: ECU가 PCSV 듀티율 제어 → 흡기 서지탱크 유입</li>
+              <li>유입된 HC는 연소실에서 재연소</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 34</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">전자제어 현가장치 (ECS) 감쇠력 가변 쇽업소버</h2>
+          <div class="card-source">9.유압식전자제어 현가장치정비1 / 노면 및 주행 상태에 따른 감쇠력 가변 제어 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit34_ecs">
+          <img id="img_unit34_ecs" alt="전자제어 현가 감쇠력 가변 쇽업소버 회전 오리피스 단면" src="img/image34.png">
+          <div class="drop-overlay has-image" id="drop_unit34_ecs">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">전자제어 현가장치 감쇠력 가변 쇽업소버 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">쇽업소버 상단의 스텝 액추에이터 모터가 중공 피스톤 로드 내부의 컨트롤 로드를 회전시켜, 하단 피스톤 밸브의 가변 로터리 오리피스(Rotary Orifice) 구멍 크기를 조절합니다. 구멍 크기에 따라 감쇠력이 세 단계로 바뀝니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>Soft (대 구멍): 오일 유로 단면적 확대로 부드러운 승차감 (일반 주행)</li>
+              <li>Medium (중 구멍): 표준 감쇠력 제어</li>
+              <li>Hard (소 구멍): 오일 저항 극대화로 급제동 다이브 방지 및 고속 선회 롤링 방지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 35</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">커먼레일 전자제어 고압 연료 인젝터 (Piezo / Solenoid)</h2>
+          <div class="card-source">2.디젤전자제어장치정비1 / 1.가솔린전자제어 연료 분사 노즐 및 제어실 압력 밸런스 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit35_injector">
+          <img id="img_unit35_injector" alt="커먼레일 고압 연료 인젝터 제어실 단면과 다공 노즐" src="img/image35.png">
+          <div class="drop-overlay has-image" id="drop_unit35_injector">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">커먼레일 고압 연료 인젝터 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">솔레노이드/피에조 액추에이터가 통전되면 밸브 볼이 열리고, 노즐 니들 상부 제어실(Control Chamber)의 고압 연료가 리턴 포트로 빠져나갑니다. 제어실 압력이 떨어지면 니들이 상승하고, 팁의 다공 노즐을 통해 초고압 미립화 분무가 연소실로 뿜어집니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>통전 → 밸브 볼 개방 → 제어실 고압 연료 리턴 → 니들 상승</li>
+              <li>니들 상승으로 다공 노즐 분사 (초고압 미립화)</li>
+              <li>제어실 압력 밸런스가 분사 개시·종료와 분사량을 결정</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 36</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">듀얼 클러치 변속기 (DCT) 동심 이중 입력축</h2>
+          <div class="card-source">7.자동변속기정비 신기술 자동화 수동변속기 및 동력 단절 없는 변속 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit36_dct">
+          <img id="img_unit36_dct" alt="DCT 동심 이중 입력축과 두 클러치 팩 구조" src="img/image36.png">
+          <div class="drop-overlay has-image" id="drop_unit36_dct">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">DCT 동심 이중 입력축 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">두 개의 독립된 클러치 팩과 동심원 축으로 포개진 이중 입력축 구조입니다. 한 기어가 동력을 전달하는 동안 다음 변속단이 미리 맞물려 있어, 클러치만 교대로 체결되며 구동 토크 단절(Torque Interruption)이 발생하지 않습니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>내부 중실축(Inner Solid Shaft): 홀수단(1, 3, 5, 7단) 기어 구동</li>
+              <li>외부 중공축(Outer Hollow Shaft): 짝수단(2, 4, 6단) 및 후진(R) 기어 구동</li>
+              <li>클러치 교대 체결로 동력 단절 없는 변속</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 37</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">브레이크 진공 배력 장치 (Vacuum Booster)</h2>
+          <div class="card-source">11.전자제어공압식 제동장치정비 진공 배력 장치 작동 원리 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit37_booster">
+          <img id="img_unit37_booster" alt="진공 배력 장치 다이어프램 정압실과 변압실 단면" src="img/image37.png">
+          <div class="drop-overlay has-image" id="drop_unit37_booster">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">진공 배력 장치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">대형 다이어프램을 경계로 전방의 정압실(엔진 흡기 매니폴드에 연결된 진공실)과 후방의 변압실(Variable Pressure Chamber)이 나뉩니다. 페달을 밟으면 진공 밸브가 닫히고 공기 밸브가 열려 대기압이 변압실로 유입되고, 이 압력차(ΔP)로 다이어프램이 마스터 실린더 푸시로드를 강하게 밉니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>정압실: 엔진 흡기 매니폴드 연결 → 항상 진공</li>
+              <li>페달 조작: 진공 밸브 폐쇄 · 공기 밸브 개방 → 변압실에 대기압 유입</li>
+              <li>압력차(ΔP)가 다이어프램을 밀어 제동력 증폭</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 40</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">하이드로백 실차 장착 위치 (엔진룸 투영)</h2>
+          <div class="card-source">브레이크 진공 배력 장치(UNIT 37) 보조 설명 · 실차 장착 위치</div>
+        </div>
+        <div class="image-zone" data-id="unit40_hydrobooster">
+          <img id="img_unit40_hydrobooster" alt="하이드로백 실차 장착 위치 엔진룸 투영" src="img/image37%20보조설명%20사진.png">
+          <div class="drop-overlay has-image" id="drop_unit40_hydrobooster">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">하이드로백 실차 장착 위치 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">하이드로백의 개념과 엔진룸 안의 실제 장착 위치를 실차 투영으로 나타냈습니다. 운전석 브레이크 페달의 푸시로드가 방화벽을 뚫고 하이드로백 중심축에 직결됩니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 구성</div>
+            <ul>
+              <li>방화벽(Firewall) 직결: 페달 푸시로드 → 하이드로백 중심축</li>
+              <li>하이드로백 본체: 방화벽에 밀착된 지름 약 20~25cm의 원통형 드럼</li>
+              <li>전면에 마스터 실린더 결합, 상단 반투명 리저버 탱크(노란 캡) 장착</li>
+              <li>상단 두꺼운 진공 호스로 흡기 매니폴드에 연결되어 부압 공급</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="engine">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 38</span>
+            <span class="card-category">엔진</span>
+          </div>
+          <h2 class="card-title">열선식 공기유량 센서 (Hot-Wire MAF)</h2>
+          <div class="card-source">1.가솔린 전자제어장치정비 흡입 공기량 직접 계측 방식 문항</div>
+        </div>
+        <div class="image-zone" data-id="unit38_maf">
+          <img id="img_unit38_maf" alt="열선식 공기유량 센서 바이패스 열선과 휘스톤 브리지 회로" src="img/image38.png">
+          <div class="drop-overlay has-image" id="drop_unit38_maf">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">열선식 공기유량 센서 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">흡기 덕트 내부 바이패스 통로의 백금 열선(Platinum Hot-wire)과 온도 보상 저항(Cold-wire)을 상단 휘스톤 브리지 회로가 제어합니다. 흡입 공기가 열선을 식히면 일정한 온도차를 유지하도록 가열 전류가 증가하고, 이 전류 변화를 전압 신호로 바꿔 ECU에 보냅니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>백금 열선 + 온도 보상 저항(Cold-wire)의 일정 온도차 유지</li>
+              <li>공기량 증가 → 열선 냉각 → 가열 전류 증가</li>
+              <li>가열 전류 변화를 전압 신호로 변환해 ECU 전달 (질량 유량 직접 계측)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card" data-cat="chassis">
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="card-id">UNIT 39</span>
+            <span class="card-category">섀시</span>
+          </div>
+          <h2 class="card-title">차속 감응형 전자제어 조향장치 (SSPS)</h2>
+          <div class="card-source">10.유압식전자제어 조향장치정비1 문제 5번 (차속센서 연동 조향 보조력 제어)</div>
+        </div>
+        <div class="image-zone" data-id="unit39_ssps">
+          <img id="img_unit39_ssps" alt="차속 감응형 조향 SSPS 솔레노이드 밸브와 듀얼 유압 경로" src="img/image39.png">
+          <div class="drop-overlay has-image" id="drop_unit39_ssps">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="drop-text">차속 감응형 조향장치 SSPS 3D 이미지 등록</span>
+            <span class="drop-sub">채팅 이미지를 끌어다 놓거나 클릭</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">차속에 따라 SSPS 솔레노이드 밸브를 제어해 운전대 조작감을 바꿉니다. 저속·주차 시에는 밸브를 닫아 동력 실린더에 최대 유압을 공급하고, 고속 주행 시에는 밸브를 열어 작동유 일부를 리저버 탱크로 바이패스시켜 보조 압력을 낮춥니다.</p>
+          <div class="key-points">
+            <div class="key-title">핵심 개념</div>
+            <ul>
+              <li>저속·주차: 밸브 폐쇄 → 최대 유압 → 가볍고 부드러운 조향</li>
+              <li>고속: 밸브 개방 → 유압 일부를 리저버로 바이패스 → 보조 압력 감소</li>
+              <li>차속센서 신호로 듀얼 유압 경로 전환 → 안정적인 직진 주행감</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 라이트박스 모달 -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="zoom-wrap" id="zoomWrap"><img id="modalImg" class="modal-img" src="" alt="확대 뷰"></div>
+      <div class="modal-footer">
+        <span class="modal-title" id="modalTitle">3D 다이어그램 상세</span>
+        <span class="modal-hint">휠: 확대/축소 · 드래그: 이동 · 더블클릭: 원래 크기</span>
+        <button class="modal-close" id="modalClose">닫기 (ESC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이미지 업로드 히든 인풋 -->
+  <input type="file" id="filePicker" accept="image/*" style="display:none">
+
+  <script>
+    const STORAGE_PREFIX = "dr_diagram_3d_";
+    let activeZoneId = null;
+
+    // 초기 로컬 스토리지 이미지 복원
+    document.querySelectorAll(".image-zone").forEach(zone => {
+      const id = zone.dataset.id;
+      const img = document.getElementById("img_" + id);
+      const drop = document.getElementById("drop_" + id);
+      const saved = localStorage.getItem(STORAGE_PREFIX + id);
+
+      if (saved) {
+        img.src = saved;
+        drop.classList.add("has-image");
+        drop.querySelector(".drop-text").textContent = "이미지 변경 또는 확대";
+      }
+
+      // 클릭 시 라이트박스 열기 또는 파일 선택
+      zone.addEventListener("click", () => {
+        if (drop.classList.contains("has-image")) {
+          openModal(img.src, zone.closest(".card").querySelector(".card-title").textContent);
+        } else {
+          activeZoneId = id;
+          document.getElementById("filePicker").click();
+        }
+      });
+
+      // 드래그 앤 드롭 지원
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.style.borderColor = "var(--cobalt)";
+      });
+      zone.addEventListener("dragleave", e => {
+        zone.style.borderColor = "";
+      });
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.style.borderColor = "";
+        
+        // 브라우저 내부 이미지 드래그 (URL/Base64)
+        const html = e.dataTransfer.getData("text/html");
+        if (html) {
+          const match = html.match(/src=["']([^"']+)["']/);
+          if (match && match[1]) {
+            saveImage(id, match[1]);
+            return;
+          }
+        }
+
+        // 파일 드롭
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          const file = e.dataTransfer.files[0];
+          const reader = new FileReader();
+          reader.onload = evt => saveImage(id, evt.target.result);
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+
+    // 파일 선택 피커 핸들러
+    document.getElementById("filePicker").addEventListener("change", e => {
+      if (e.target.files && e.target.files[0] && activeZoneId) {
+        const reader = new FileReader();
+        reader.onload = evt => saveImage(activeZoneId, evt.target.result);
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+
+    function saveImage(id, dataUrl) {
+      try {
+        localStorage.setItem(STORAGE_PREFIX + id, dataUrl);
+      } catch (err) {
+        console.warn("Storage quota exceeded", err);
+      }
+      const img = document.getElementById("img_" + id);
+      const drop = document.getElementById("drop_" + id);
+      img.src = dataUrl;
+      drop.classList.add("has-image");
+      drop.querySelector(".drop-text").textContent = "이미지 변경 또는 확대";
+    }
+
+    // 라이트박스 모달
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const zoomWrap = document.getElementById("zoomWrap");
+    const ZOOM_MAX = 6;
+    let zs = 1, zx = 0, zy = 0, dragging = null;
+    function applyZoom() {
+      const W = zoomWrap.clientWidth, H = zoomWrap.clientHeight;
+      zs = Math.min(ZOOM_MAX, Math.max(1, zs));
+      if (zs === 1) { zx = 0; zy = 0; }
+      else {
+        zx = Math.min(0, Math.max(W * (1 - zs), zx));
+        zy = Math.min(0, Math.max(H * (1 - zs), zy));
+      }
+      modalImg.style.transform = `translate(${zx}px, ${zy}px) scale(${zs})`;
+      zoomWrap.style.cursor = zs > 1 ? "grab" : "zoom-in";
+    }
+    function resetZoom() { zs = 1; zx = 0; zy = 0; applyZoom(); }
+    function openModal(src, title) {
+      modalImg.src = src;
+      modalTitle.textContent = title;
+      modal.classList.add("active");
+      resetZoom();
+    }
+    zoomWrap.addEventListener("wheel", e => {
+      e.preventDefault();
+      const r = zoomWrap.getBoundingClientRect();
+      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const ns = Math.min(ZOOM_MAX, Math.max(1, zs * Math.exp(-e.deltaY * 0.0015)));
+      const k = ns / zs;
+      zx = px - (px - zx) * k;
+      zy = py - (py - zy) * k;
+      zs = ns;
+      applyZoom();
+    }, { passive: false });
+    zoomWrap.addEventListener("pointerdown", e => {
+      if (zs <= 1) return;
+      dragging = { x: e.clientX - zx, y: e.clientY - zy };
+      zoomWrap.setPointerCapture(e.pointerId);
+      zoomWrap.style.cursor = "grabbing";
+    });
+    zoomWrap.addEventListener("pointermove", e => {
+      if (!dragging) return;
+      zx = e.clientX - dragging.x;
+      zy = e.clientY - dragging.y;
+      applyZoom();
+    });
+    zoomWrap.addEventListener("pointerup", () => { dragging = null; applyZoom(); });
+    zoomWrap.addEventListener("dblclick", resetZoom);
+    document.getElementById("modalClose").addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
+    window.addEventListener("keydown", e => { if (e.key === "Escape") modal.classList.remove("active"); });
+
+    // 카테고리 필터링 탭
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const filter = btn.dataset.filter;
+        document.querySelectorAll(".card").forEach(card => {
+          if (filter === "all" || card.dataset.cat === filter) {
+            card.style.display = "flex";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+    });
+
+    // 문제풀이 화면에서 #unitNN_... 해시로 들어오면 해당 단원 카드로 이동
+    if (location.hash.length > 1) {
+      const zone = document.querySelector(`.image-zone[data-id="${location.hash.slice(1)}"]`);
+      if (zone) zone.closest(".card").scrollIntoView({ block: "start" });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" role="img" aria-label="자동차 에어컨 냉동 사이클 및 팽창밸브 증발기 연결 도해">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DCE5EE" />
+      <stop offset="100%" stop-color="#C8D6E5" />
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1040E8" flood-opacity="0.1" />
+    </filter>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#E53935" />
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1040E8" />
+    </marker>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="960" height="540" fill="url(#bgGrad)" rx="16" />
+
+  <!-- 상단 타이틀 -->
+  <text x="480" y="44" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="22" font-weight="700" fill="#111C2D" text-anchor="middle" letter-spacing="-0.02em">
+    자동차 에어컨 냉동 사이클 &amp; 팽창밸브-증발기 직결 경로
+  </text>
+  <text x="480" y="68" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="13" font-weight="500" fill="#64748B" text-anchor="middle">
+    ① 압축기 → ② 응축기 → ③ 리시버 드라이어 → ④ 팽창밸브(감압) → ⑤ 증발기(기화)
+  </text>
+
+  <!-- 고압부 / 저압부 영역 분할 바닥 -->
+  <rect x="50" y="90" width="410" height="420" rx="12" fill="rgba(255, 255, 255, 0.55)" stroke="rgba(16, 64, 232, 0.4)" stroke-width="1.5" />
+  <rect x="500" y="90" width="410" height="420" rx="12" fill="rgba(255, 235, 238, 0.6)" stroke="rgba(229, 57, 53, 0.4)" stroke-width="1.5" />
+
+  <!-- 영역 헤더 배지 -->
+  <rect x="70" y="105" width="110" height="26" rx="13" fill="#1040E8" />
+  <text x="125" y="122" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+    저압부 (Low Side)
+  </text>
+  <text x="195" y="122" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="12" font-weight="600" fill="#444656">
+    실내 차실 (Cabin)
+  </text>
+
+  <rect x="520" y="105" width="110" height="26" rx="13" fill="#E53935" />
+  <text x="575" y="122" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+    고압부 (High Side)
+  </text>
+  <text x="645" y="122" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="12" font-weight="600" fill="#444656">
+    엔진룸 (Engine Bay)
+  </text>
+
+  <!-- 1. 압축기 카드 -->
+  <g filter="url(#cardShadow)">
+    <rect x="420" y="150" width="180" height="85" rx="10" fill="#FFFFFF" stroke="#8EA7C2" stroke-width="1.2" />
+    <text x="510" y="176" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="15" font-weight="700" fill="#111C2D" text-anchor="middle">
+      ① A/C 압축기
+    </text>
+    <text x="510" y="195" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#1040E8" text-anchor="middle">
+      (Compressor)
+    </text>
+    <text x="510" y="218" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#D81B60" text-anchor="middle">
+      저온저압 기체 → 고온고압 기체
+    </text>
+  </g>
+
+  <!-- 2. 응축기 카드 -->
+  <g filter="url(#cardShadow)">
+    <rect x="700" y="150" width="180" height="85" rx="10" fill="#FFFFFF" stroke="#E53935" stroke-width="1.2" />
+    <text x="790" y="176" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="15" font-weight="700" fill="#111C2D" text-anchor="middle">
+      ② 응축기 (컨덴서)
+    </text>
+    <text x="790" y="195" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#E53935" text-anchor="middle">
+      (Condenser &amp; Fan)
+    </text>
+    <text x="790" y="218" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#E53935" text-anchor="middle">
+      고온고압 기체 → 중온고압 액체
+    </text>
+  </g>
+
+  <!-- 3. 리시버 드라이어 카드 -->
+  <g filter="url(#cardShadow)">
+    <rect x="700" y="295" width="180" height="85" rx="10" fill="#FFFFFF" stroke="#E53935" stroke-width="1.2" />
+    <text x="790" y="320" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="15" font-weight="700" fill="#111C2D" text-anchor="middle">
+      ③ 리시버 드라이어
+    </text>
+    <text x="790" y="340" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#E53935" text-anchor="middle">
+      (Receiver-Drier)
+    </text>
+    <text x="790" y="363" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="500" fill="#444656" text-anchor="middle">
+      수분 흡수 · 불순물 여과 · 액체 저장
+    </text>
+  </g>
+
+  <!-- 4. 팽창밸브 카드 (경계선 중앙 강조) -->
+  <g filter="url(#cardShadow)">
+    <rect x="400" y="380" width="190" height="100" rx="10" fill="#FFFFFF" stroke="#1040E8" stroke-width="2" />
+    <text x="495" y="406" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="15" font-weight="700" fill="#111C2D" text-anchor="middle">
+      ④ 팽창밸브 (TXV)
+    </text>
+    <text x="495" y="426" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#1040E8" text-anchor="middle">
+      (Expansion Valve)
+    </text>
+    <text x="495" y="449" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="700" fill="#E53935" text-anchor="middle">
+      중온고압 액체 유입
+    </text>
+    <text x="495" y="468" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="700" fill="#1040E8" text-anchor="middle">
+      ↓ 급격한 감압(교축) 후 안개액 토출
+    </text>
+  </g>
+
+  <!-- 5. 증발기 카드 -->
+  <g filter="url(#cardShadow)">
+    <rect x="80" y="240" width="210" height="95" rx="10" fill="#FFFFFF" stroke="#1040E8" stroke-width="2" />
+    <text x="185" y="266" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="15" font-weight="700" fill="#111C2D" text-anchor="middle">
+      ⑤ 증발기 (이배포레이터)
+    </text>
+    <text x="185" y="286" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="600" fill="#1040E8" text-anchor="middle">
+      (Evaporator &amp; Blower)
+    </text>
+    <text x="185" y="310" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="700" fill="#1040E8" text-anchor="middle">
+      저온저압 안개액 → 저온저압 기체
+    </text>
+    <text x="185" y="325" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="10" font-weight="500" fill="#64748B" text-anchor="middle">
+      [실내 열 흡수 기화 / 냉기 송풍]
+    </text>
+  </g>
+
+  <!-- 배관 연결선 -->
+  <!-- 1 -> 2: 고온고압 기체 -->
+  <path d="M 600 192 L 700 192" fill="none" stroke="#E53935" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowRed)" />
+  <text x="650" y="182" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="10" font-weight="700" fill="#E53935" text-anchor="middle">고온고압 기체</text>
+
+  <!-- 2 -> 3: 중온고압 액체 -->
+  <path d="M 790 235 L 790 295" fill="none" stroke="#E53935" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowRed)" />
+  <text x="835" y="270" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="10" font-weight="700" fill="#E53935" text-anchor="middle">중온고압 액체</text>
+
+  <!-- 3 -> 4: 고압 액체 유입 -->
+  <path d="M 700 337 L 630 337 L 630 430 L 590 430" fill="none" stroke="#E53935" stroke-width="6" stroke-linejoin="round" marker-end="url(#arrowRed)" />
+  <text x="650" y="380" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="10" font-weight="700" fill="#E53935" text-anchor="middle">고압 액체 배관</text>
+
+  <!-- ★ 4 -> 5: 팽창밸브에서 증발기로 직접 이어지는 파란 배관 (완전 노출 및 강조) ★ -->
+  <path d="M 400 430 L 185 430 L 185 335" fill="none" stroke="#1040E8" stroke-width="8" stroke-linejoin="round" marker-end="url(#arrowBlue)" />
+  
+  <!-- 4 -> 5 연결 구간 강조 배지 -->
+  <rect x="200" y="405" width="180" height="24" rx="12" fill="#1040E8" />
+  <text x="290" y="421" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+    ④ 팽창밸브 출구 → ⑤ 증발기 입구 직결
+  </text>
+  <text x="290" y="450" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="11" font-weight="700" fill="#1040E8" text-anchor="middle">
+    [저온·저압 안개상 액체 냉매 유입]
+  </text>
+
+  <!-- 5 -> 1: 증발기에서 압축기로 귀환하는 흡입 라인 -->
+  <path d="M 185 240 L 185 192 L 420 192" fill="none" stroke="#1040E8" stroke-width="6" stroke-linejoin="round" marker-end="url(#arrowBlue)" />
+  <text x="300" y="182" font-family="'Plus Jakarta Sans', 'Apple SD Gothic Neo', sans-serif" font-size="10" font-weight="700" fill="#1040E8" text-anchor="middle">
+    저온저압 기체 (흡입 배관)
+  </text>
+
+  <!-- 고/저압 경계선 -->
+  <line x1="495" y1="90" x2="495" y2="510" stroke="#747688" stroke-width="1.8" stroke-dasharray="6,6" opacity="0.6" />
+</svg>
