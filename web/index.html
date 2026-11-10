@@ -7,271 +7,314 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
-<meta name="theme-color" content="#f5f5f4">
+<meta name="theme-color" content="#f2f4f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="정비 주관식">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap">
 <script>
-  tailwind.config = { theme: { extend: { fontFamily: { sans: ["Pretendard", "system-ui", "sans-serif"] } } } };
+  tailwind.config = { theme: { extend: { fontFamily: { sans: ["Geist", "Pretendard", "system-ui", "sans-serif"] } } } };
 </script>
 <style>
-  body { -webkit-tap-highlight-color: transparent; }
-  .card { touch-action: pan-y; will-change: transform; }
-  .sheet { z-index: 30; transform: translateY(105%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
-  .sheet.open { transform: none; }
-  /* 해설: 화면 아래 시트 대신 문제 카드 안, 답 바로 아래에 펼쳐진다 */
-  #sheet.inline{position:relative;inset:auto;transform:none;max-height:none;overflow:visible;max-width:none;z-index:auto;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;border-top:1px solid #E2E8F0;padding:22px 0 0;margin:24px 0 0;animation:sheetIn .42s cubic-bezier(.2,.8,.2,1)}
-  #sheet.inline>div:first-child{display:none}
-  @keyframes sheetIn{from{opacity:0;transform:translate3d(0,-8px,0)}to{opacity:1;transform:none}}
-  .scrim { z-index: 29; opacity: 0; pointer-events: none; transition: opacity .25s; }
-  .scrim.show { opacity: 1; pointer-events: auto; }
-  #world,#floor{display:none}
-  #worldPick button.on{background:#171717;color:#fff}
+  /* ---- 디자인 토큰: achromatic-ledger (크롬은 무채색, 차트색은 데이터 한 곳에만) ---- */
+  :root{
+    --ground:#f2f4f7; --surface:#ffffff; --raised:#eef1f5;
+    --border:#e3e7ec; --rule:#eef1f4; --control:#cfd5dd;
+    --text:#111418; --muted:#5f6368; --faint:#6b6b6b;
+    --primary:#141414; --accent:#1d5fbf; --accent-tint:#eaf1fb;
+    --positive:#247b50; --negative:#c4242a;
+    --warning-bg:#fffbeb; --warning-border:#fde68a; --warning-ink:#92400e;
+    --radius-card:8px; --radius-control:6px;
+    --font:"Geist","Pretendard",system-ui,sans-serif;
+    --mono:"Geist Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{background:var(--ground);color:var(--text);font-family:var(--font);font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+  button,select,input,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
+  button:active:not(:disabled){transform:scale(.99)}
+  button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)}
 
-  /* ---- 디자인: 각진 면, 겹쳐진 층, 얇은 유리 질감 (color/DESIGN.md 팔레트) ---- */
-  :root{--cobalt:#1040E8;--ink:#1E293B;--muted:#64748B;--steel:#8EA7C2;--paper:#FBFBFA}
-  body.atmos{background:linear-gradient(170deg,#DCE5EE 0%,#C8D6E5 100%);color:var(--ink)}
-  body.atmos::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .4  0 0 0 0 .45  0 0 0 0 .5  0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-  /* 모든 모서리는 직각 (동그란 점 LCD는 예외) */
-  *{border-radius:0!important}
-  #clockDots span{border-radius:50%!important}
-  /* 카드: 유리 한 장 + 뒤로 겹쳐진 종이 두 장(그림자로 만든 단단한 층) + 부드러운 깊이 그림자 */
-  #card{position:relative;
-    background-color:rgba(255,255,255,.8);
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
-    backdrop-filter:blur(20px) saturate(1.1);-webkit-backdrop-filter:blur(20px) saturate(1.1);
-    border:1px solid rgba(255,255,255,.7);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.9),
-      0 8px 32px -4px rgba(16,64,232,.10),
-      0 2px 8px -2px rgba(30,41,59,.06);
-    transition:box-shadow .45s cubic-bezier(.2,.8,.2,1)}
-  #card:hover{box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.9),
-      0 14px 40px -6px rgba(16,64,232,.16),
-      0 4px 12px -2px rgba(30,41,59,.08)}
-  /* 패널·시트·바: 같은 유리 질감, 층이 낮은 쪽 */
-  #sheet,#progress,#listPanel,#worldPick button{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-  #sheet{background:rgba(255,255,255,.86);border-top:1px solid rgba(255,255,255,.8);box-shadow:0 -10px 40px -8px rgba(16,64,232,.12)}
-  #progress{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.75);box-shadow:0 6px 20px -6px rgba(16,64,232,.14),inset 0 1px 0 rgba(255,255,255,.9)}
-  /* 버튼: 누르기 전에 살짝 떠오르고, 누르면 눌린다 */
-  button{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s cubic-bezier(.2,.8,.2,1),background-color .2s ease,color .2s ease}
-  button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(16,64,232,.32),inset 0 1px 0 rgba(255,255,255,.6)}
-  button:active:not(:disabled){transform:translateY(0) scale(.98);transition-duration:.08s}
-  button:focus-visible{outline:2px solid var(--cobalt);outline-offset:3px}
-  #submit:hover{background-color:#0C36C4}
-  #worldPick button{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.8);color:var(--ink)}
-  #worldPick button.on{background:var(--cobalt);color:#fff;border-color:var(--cobalt)}
-  #question{font-family:"Pretendard",system-ui,sans-serif;letter-spacing:-.01em}
-  #progNum,#pos,#clockDate{font-family:"Space Grotesk",ui-monospace,monospace;font-weight:600;letter-spacing:.02em}
-  #answerIn{background:rgba(255,255,255,.7);box-shadow:inset 0 1px 3px rgba(30,41,59,.08);border:1px solid rgba(142,167,194,.35)}
-  #answerIn:focus{border-color:var(--cobalt);box-shadow:0 0 0 3px rgba(16,64,232,.15)}
-  /* 로딩바 정지/재생 버튼: 로딩바 밖, 화면 왼쪽 아래에 따로 둔다 */
-  #loaderPause{position:fixed;left:10px;bottom:14px;z-index:5;width:40px;height:40px;padding:0;margin:0;font-size:16px;line-height:1;border-radius:50%;border:1px solid rgba(142,167,194,.45);background:#fff;color:#1E293B;box-shadow:0 8px 20px -10px rgba(16,64,232,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-  @media (prefers-reduced-motion: reduce){button,#card{transition:none!important}}
+  /* 공통 컨트롤: 평평한 면, 1px 테두리, 6px 모서리, 높이 36px */
+  .btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px;font-weight:500;color:var(--text);text-decoration:none;white-space:nowrap}
+  .btn:hover:not(:disabled){border-color:#9aa3ae}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-primary:hover:not(:disabled){background:#2a2a2a;border-color:#2a2a2a}
+  .btn-wide{flex:1;height:44px;font-weight:600}
+  .select{height:36px;padding:0 10px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px;max-width:62%}
 
-  #card{z-index:1}
-  #clock{background:#C8D6E5;border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 2px 6px rgba(30,41,59,.12),0 10px 24px -12px rgba(16,64,232,.28)}
-  #stage{position:relative}
-  .card-next{position:absolute;inset:0;z-index:0;pointer-events:none;padding:28px;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.6);box-shadow:0 8px 24px -10px rgba(16,64,232,.12);transform:translate3d(0,14px,0) scale(.96);opacity:.85}
-  #pile{position:relative;align-self:stretch;height:96px;margin-top:-14px;margin-left:12px;margin-right:12px;z-index:0}
-  .pile-side{position:absolute;top:0;height:70px;width:46%}
-  .pile-right{left:50%;--s:1;--tone:#1040E8}
-  .pile-left{right:50%;--s:-1;--tone:#8EA7C2}
-  .pile-side>div{position:absolute;left:0;right:0;top:0;height:50px;display:flex;align-items:center;padding:0 14px;cursor:pointer;font-size:12px;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgb(calc(255 - var(--d)*6),calc(255 - var(--d)*6),calc(252 - var(--d)*6));border:1px solid rgba(255,255,255,.85);border-left:3px solid var(--tone);box-shadow:0 6px 16px -8px rgba(16,64,232,.22);transform:translate3d(calc(var(--d)*3px),calc(var(--d)*3px),0) rotate(var(--r,0deg));transition:transform var(--pile-ms,500ms) cubic-bezier(.2,.8,.2,1),opacity .2s,background .2s;transition-delay:calc(var(--d)*28ms)}
-  .pile-side>div .pm{color:var(--tone);font-weight:700;margin-right:8px;font-family:"Space Grotesk",ui-monospace,monospace}
-  .pile-side>div:hover{background:#fff}
-  .pile-tag{position:absolute;top:74px;font-size:12px;color:#64748B;font-family:"Space Grotesk",ui-monospace,monospace;font-weight:600;white-space:nowrap;pointer-events:none}
-  .pile-right .pile-tag{left:0}
-  .pile-left .pile-tag{right:0;transition:opacity .2s}
-  .pile-right .pile-tag{transition:opacity .2s}
-  .pile-side{z-index:0}
-  .pile-side .pm{color:var(--tone);font-weight:700;margin-right:8px;font-family:"Space Grotesk",ui-monospace,monospace}
-  .pile-review{pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px}
-  .gauge{position:fixed;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:5}
-  .gauge-l{left:5px}
-  .gauge-r{right:5px}
-  .gauge-track{width:4px;height:180px;background:#CBD5E1;position:relative;overflow:hidden}
-  .gauge-fill{position:absolute;left:0;right:0;bottom:0;height:0%;background:#1040E8;transition:height .6s cubic-bezier(.2,.8,.2,1)}
-  .gauge-r .gauge-fill{background:#1E293B}
-  .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:300px;margin-left:auto;margin-right:auto}
-  .dots[hidden]{display:none}
-  .dot{width:9px;height:9px;border-radius:50%!important;border:1.5px solid #8EA7C2;background:transparent;padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s}
-  .dot:hover{transform:scale(1.35)}
-  .dot.ok{background:#1040E8;border-color:#1040E8}
-  .dot.ng{background:#8EA7C2;border-color:#8EA7C2}
-  .dot.cur{box-shadow:0 0 0 3px rgba(16,64,232,.25);transform:scale(1.25)}
-  .edge-no{position:fixed;left:6px;top:24%;z-index:5;pointer-events:none;display:flex;flex-direction:column;align-items:center;font-family:"Space Grotesk",ui-monospace,monospace;color:#1040E8}
-  #bigNoV{font-size:30px;font-weight:700;line-height:1}
-  #bigNoT{font-size:10px;color:#64748B;margin-top:4px}
-  .edge-nav{position:fixed;top:68%;z-index:5;width:40px;height:40px;background:#fff;color:#1E293B;font-size:22px;line-height:1;box-shadow:0 8px 20px -10px rgba(16,64,232,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
-  .edge-nav:hover{transform:translateY(-2px)}
-  .edge-nav:active{transform:scale(.96)}
-  .edge-nav-l{left:6px}
-  .edge-nav-r{right:6px}
-  .today{position:fixed;right:10px;bottom:14px;z-index:5;pointer-events:none;font-family:"Space Grotesk",ui-monospace,monospace;font-size:11px;font-weight:600;color:#64748B}
-  .choice{display:block;width:100%;text-align:left;padding:14px 16px;background:#fff;border:1px solid #E2E8F0;font-size:15px;color:#1E293B;transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s}
-  .choice:hover:not(:disabled){transform:translateY(-1px);border-color:#8EA7C2}
-  .choice:active:not(:disabled){transform:scale(.99)}
+  /* 상단: 제품 이름이 셸, 기능은 오른쪽 */
+  main{max-width:640px;margin:0 auto;padding:18px 16px 40px}
+  main.wide{max-width:1200px!important}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:12px}
+  .product{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #pos{font-size:14px;color:var(--muted)}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #worldPick{display:flex;gap:6px}
+  #worldPick button{height:32px;padding:0 12px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:13px;color:var(--text)}
+  #worldPick button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+  #clock{display:flex;align-items:center;gap:8px}
+  #clockDots{display:flex;gap:4px}
+  #clockDots span{border-radius:0!important}
+  #clockDate{font-size:12px;color:var(--muted)}
+
+  /* 진행: 주요 데이터 한 곳(차트색) */
+  /* app.js가 이 패널을 떠다니게 옮기는 값(translate3d)을 막는다. 제자리 줄 안에 둔다. */
+  #progress{transform:none!important;margin-top:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card)}
+  .prog-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+  #progNum{font-size:16px;font-weight:500;color:var(--text)}
+  .bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+  #progFill{height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .5s ease-out}
+
+  /* 본문 */
+  .split{display:block}
+  main.wide .split{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
+  .study{display:flex;flex-direction:column;align-items:stretch;padding:20px 0 0}
+  .stage{position:relative;width:100%}
+  @media (min-width:900px){
+    main.wide .split{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+    .page-view{position:sticky;top:16px}
+  }
+  .page-tools{display:flex;justify-content:flex-end;margin-bottom:8px}
+  .page-frame{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;margin-bottom:12px}
+  .page-frame img{width:100%;height:auto;display:block}
+  .ans-blur{position:absolute;background:rgba(255,255,255,.55);border-radius:4px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)} /* taste-skill-ignore: 정답 가림용 블러는 기능이다 */
+  .unblur .ans-blur{display:none}
+
+  /* 문제 카드: 흰 면, 1px 테두리, 그림자 없음 */
+  #card{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:28px}
+  #set{font-size:13px;color:var(--muted)}
+  #question{margin-top:12px;font-size:19px;font-weight:600;line-height:1.6;letter-spacing:-.01em;word-break:keep-all}
+  #card-next-wrap{position:relative}
+  #card-next-wrap>#card{position:relative;z-index:1}
+  .card-next{position:absolute;inset:0;z-index:0;pointer-events:none;padding:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);transform:translate3d(0,10px,0) scale(.97);opacity:.6}
+  #nextSet{font-size:13px;color:var(--muted)}
+  #nextQ{margin-top:12px;font-size:17px;font-weight:600;word-break:keep-all}
+
+  #answerOpen{margin-top:24px;width:100%;padding:14px;background:transparent;border:1px dashed #b8c0ca;border-radius:var(--radius-control);font-size:14px;color:var(--muted)}
+  #choices{margin-top:24px;display:grid;gap:8px}
+  #answerBox{margin-top:24px}
+  #answerIn{width:100%;resize:none;padding:14px 16px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:16px;line-height:1.6}
+  #answerIn:focus{border-color:var(--accent);outline:2px solid rgba(29,95,191,.15);outline-offset:0}
+  #submit{margin-top:12px;width:100%;height:44px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius-control);font-weight:600}
+  #submit:hover{background:#2a2a2a}
+  #revealBox{margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}
+  #revealBox > p:first-child{font-size:13px;color:var(--muted)}
+  #reveal{margin-top:4px;font-size:16px;line-height:1.7;white-space:pre-wrap;word-break:keep-all}
+  #revealNote{margin-top:8px;font-size:13px;color:var(--warning-ink)}
+  #fix{margin-top:16px;padding:12px 14px;background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:var(--radius-control)}
+  #fix p:first-child{font-size:13px;font-weight:600;color:var(--warning-ink)}
+  #fixText{margin-top:4px;font-size:16px;line-height:1.7;white-space:pre-wrap;word-break:keep-all}
+
+  /* 선택지: 맞은 답만 차트색, 틀린 답은 가로줄 */
+  .choice{display:block;width:100%;text-align:left;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-control);font-size:15px;color:var(--text)}
+  .choice:hover:not(:disabled){border-color:#9aa3ae}
   .choice:disabled{cursor:default}
-  .choice.pick{border-color:#1040E8}
-  .choice.right{background:#EEF3FF;border-color:#1040E8;font-weight:700;color:#1040E8}
-  .choice.wrong{color:#64748B;text-decoration:line-through;text-decoration-thickness:1px}
-  .gauge-txt{font-family:"Space Grotesk",ui-monospace,monospace;font-size:10px;font-weight:600;color:#64748B;writing-mode:vertical-rl;letter-spacing:.04em;white-space:nowrap}
-main.wide { max-width: 1200px !important; }
-.split { display: block; }
-main.wide .split { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
-@media (min-width: 900px) {
-  main.wide .split { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-  .page-view { position: sticky; top: 16px; }
-}
-.page-frame { position: relative; background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
-.page-frame img { width: 100%; height: auto; display: block; }
-.page-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-.ans-blur { position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(255, 255, 255, 0.35); border-radius: 4px; }
-.unblur .ans-blur { display: none; }
-/* 모바일(640px 이하): 가장자리 장식이 카드와 겹치지 않게 정리, 헤더 줄바꿈, 하단 이전/다음 */
-@media (max-width: 640px) {
-  main { padding-bottom: 40px; }
-  header { flex-wrap: wrap; row-gap: 10px; }
-  #subject { max-width: 100%; flex: 1 1 100%; }
-  header > div { flex-wrap: wrap; justify-content: flex-end; }
-  #card { padding: 20px; }
-  #progress, .gauge, .edge-no, .today { display: none; }
-  .edge-nav { display: none; }
-  .edge-nav-l { left: 12px; }
-  .edge-nav-r { right: 12px; }
-  #loaderPause { left: 72px; bottom: calc(18px + env(safe-area-inset-bottom)); }
-  .sheet { max-height: 80dvh; }
-}
-/* 터치 기기: 누르고 남은 hover 떠오름을 없앤다 */
-@media (hover: none) {
-  button:hover:not(:disabled), .choice:hover:not(:disabled), .edge-nav:hover, .dot:hover { transform: none; }
-}
+  .choice.pick{border-color:var(--primary)}
+  .choice.right{background:var(--accent-tint);border-color:var(--accent);font-weight:600;color:var(--accent)}
+  .choice.wrong{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+
+  /* 이전/다음: 다음이 주 동작 */
+  .pager{display:flex;gap:10px;margin-top:16px}
+
+  /* 쌓인 카드 더미 (맞힌·틀린 문항) */
+  #pile{position:relative;align-self:stretch;height:96px;margin:8px 4px 0;z-index:0}
+  .pile-side{position:absolute;top:0;height:70px;width:46%}
+  .pile-right{left:50%;--tone:var(--accent)}
+  .pile-left{right:50%;--tone:#8a929c}
+  .pile-side>div{position:absolute;left:0;right:0;top:0;height:50px;display:flex;align-items:center;padding:0 14px;cursor:pointer;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--tone);transform:translate3d(calc(var(--d)*3px),calc(var(--d)*3px),0) rotate(var(--r,0deg));transition:transform var(--pile-ms,500ms) cubic-bezier(.2,.8,.2,1),background .2s;transition-delay:calc(var(--d)*28ms)}
+  .pile-side>div:hover{background:var(--raised)}
+  .pile-side .pm{color:var(--tone);font-weight:700;margin-right:8px;font-family:var(--mono)}
+  .pile-tag{position:absolute;top:74px;font-size:12px;color:var(--muted);font-family:var(--mono);font-weight:500;white-space:nowrap;pointer-events:none}
+  .pile-right .pile-tag{left:0}
+  .pile-left .pile-tag{right:0}
+  .pile-review{pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+  /* 번호 점 */
+  .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:300px;margin:20px auto 0}
+  .dot{width:9px;height:9px;border-radius:2px!important;border:1.5px solid #aab3be;background:transparent;padding:0}
+  .dot:hover{transform:scale(1.3)}
+  .dot.ok{background:var(--accent);border-color:var(--accent)}
+  .dot.ng{background:#8a929c;border-color:#8a929c}
+  .dot.cur{outline:2px solid rgba(17,20,24,.18);outline-offset:2px;transform:scale(1.2)}
+
+  #hint{margin-top:20px;font-size:13px;color:var(--muted);text-align:center}
+  #voice{margin:16px auto 0}
+  #status{margin-top:12px;min-height:20px;text-align:center;font-size:14px;color:var(--muted)}
+
+  /* 해설 시트: 카드 안 답 아래에 펼쳐진다 */
+  .sheet{position:fixed;z-index:30;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;max-height:72dvh;overflow-y:auto;background:var(--surface);border-top:1px solid var(--border);border-radius:12px 12px 0 0;padding:12px 24px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  .sheet.open{transform:none}
+  #sheet.inline{position:relative;inset:auto;transform:none;max-height:none;overflow:visible;max-width:none;z-index:auto;background:transparent;border:0;border-top:1px solid var(--rule);border-radius:0;padding:20px 0 0;margin:24px 0 0}
+  #sheet.inline>div:first-child{display:none}
+  .sheet-grip{width:40px;height:4px;background:var(--control);border-radius:2px;margin:0 auto 14px}
+  .scrim{position:fixed;inset:0;z-index:29;background:rgba(17,20,24,.25);opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  #chip{font-size:20px;font-weight:700}
+  #close{height:32px;padding:0 10px;font-size:14px;color:var(--muted);background:transparent;border:0}
+  #sections{margin-top:16px;display:grid;gap:18px}
+  #next{margin-top:22px;width:100%;height:44px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius-control);font-weight:600}
+
+  /* 목차 */
+  #listPanel{position:fixed;inset:0;z-index:40;overflow-y:auto;background:var(--ground)}
+  .list-wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}
+  #listSearch{margin-top:12px;width:100%;height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px}
+
+  /* 화면 가장자리 장식과 떠 있는 키는 쓰지 않는다 (JS는 그대로 동작) */
+  .gauge,.edge-no,.edge-nav,.today,#world,#floor{display:none!important}
+  #loaderPause{position:fixed;left:12px;bottom:14px;z-index:5;width:40px;height:40px;padding:0;font-size:14px;line-height:1;border-radius:50%;background:var(--surface);border:1px solid var(--control);color:var(--text)}
+
+  @media (max-width:640px){
+    main{padding:16px 16px 104px}
+    .pager{position:fixed;left:0;right:0;bottom:0;z-index:25;margin:0;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border)}
+    .pager .btn-wide{height:44px}
+    header.topbar{flex-direction:column;align-items:flex-start}
+    .actions{width:100%}
+    .select{max-width:100%;flex:1 1 100%}
+    #card{padding:20px}
+    #loaderPause{left:12px;bottom:calc(84px + env(safe-area-inset-bottom))}
+    .sheet{max-height:80dvh}
+  }
+  @media (hover:none){
+    button:hover:not(:disabled),.choice:hover:not(:disabled),.dot:hover{transform:none}
+  }
 </style>
 </head>
-<body class="min-h-dvh atmos font-sans text-[#1E293B] antialiased overflow-x-hidden">
+<body class="min-h-dvh antialiased atmos">
 <div id="world" aria-hidden="true"></div>
 <div id="floor" aria-hidden="true"></div>
 
-<main id="main" class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-10 pt-5">
-  <div id="clock" class="mb-4 self-start   px-3 py-2 shadow-inner" aria-label="현재 시간">
-    <div id="clockDots" class="flex gap-[6px]"></div>
-    <div id="clockDate" class="mt-1.5 font-mono text-[10px] font-bold tracking-widest text-[#1E293B]/70"></div>
-  </div>
-  <div id="worldPick" class="mb-4 flex gap-1.5 self-start">
-    <button data-w="earth" class=" bg-white px-3 py-1.5 text-xs font-semibold">지구</button>
-    <button data-w="moon" class=" bg-white px-3 py-1.5 text-xs font-semibold">달</button>
-    <button data-w="space" class=" bg-white px-3 py-1.5 text-xs font-semibold">우주</button>
-  </div>
-  <header class="flex items-center justify-between gap-3">
-    <select id="subject" aria-label="과목" class="max-w-[62%]  bg-white px-3 py-2 text-sm outline-none"></select>
-    <div class="flex items-center gap-2">
-      <a id="diagLink" href="diagrams/diagrams_3d.html" class="bg-white px-3 py-2 text-sm font-semibold text-[#1040E8] active:scale-[.99]">3D 해설</a>
-      <button id="modeBtn" type="button" class=" bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">모드</button>
-      <button id="listBtn" class=" bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">목차</button>
-      <span id="pos" class="text-sm tabular-nums text-[#64748B]"></span>
+<main id="main">
+  <header class="topbar">
+    <div class="brand">
+      <h1 class="product">정비산업기사 기출 풀이</h1>
+      <span id="pos" class="mono"></span>
+    </div>
+    <div class="actions">
+      <a id="diagLink" class="btn" href="diagrams/diagrams_3d.html">3D 해설</a>
+      <button id="modeBtn" type="button" class="btn">모드</button>
+      <button id="listBtn" type="button" class="btn">목차</button>
     </div>
   </header>
 
-  <div id="split" class="split">
-  <aside id="pageView" class="page-view" hidden>
-    <div class="page-tools"><button id="blurToggle" type="button" class="bg-white px-3 py-1.5 text-xs font-semibold active:scale-[.99]">블러 끄기</button></div>
-    <div id="figures"></div>
-  </aside>
-  <div class="flex flex-1 flex-col items-center justify-center py-6">
-    <div id="stage" class="relative w-full">
-    <div id="cardNext" class="card-next" aria-hidden="true">
-      <p id="nextSet" class="text-xs text-[#64748B]"></p>
-      <p id="nextQ" class="mt-3 break-keep text-[17px] font-semibold text-[#1E293B]"></p>
-    </div>
-    <article id="card" class="card w-full  bg-white p-7">
-      <p id="set" class="text-xs text-[#64748B]"></p>
-      <p id="question" class="mt-4 break-keep text-[19px] font-semibold leading-relaxed"></p>
-
-      <button id="answerOpen" class="mt-8 w-full  border border-dashed border-stone-300 py-4 text-sm text-[#64748B] active:scale-[.99]">정답 쓰기 (눌러서 열기)</button>
-
-      <div id="choices" class="mt-8 space-y-2" hidden></div>
-
-      <div id="answerBox" class="mt-8" hidden>
-        <textarea id="answerIn" rows="4" placeholder="답을 적고 제출하세요"
-                  class="w-full resize-none  bg-stone-100 p-4 text-base outline-none focus:bg-stone-50"></textarea>
-        <button id="submit" class="mt-3 w-full  bg-[#1040E8] py-3 font-semibold text-white active:scale-[.99]">제출</button>
+  <div class="toolbar">
+    <select id="subject" aria-label="과목" class="select"></select>
+    <div class="toolbar-right">
+      <div id="worldPick" role="group" aria-label="배경">
+        <button data-w="earth" type="button">지구</button>
+        <button data-w="moon" type="button">달</button>
+        <button data-w="space" type="button">우주</button>
       </div>
+      <div id="clock" aria-label="현재 시간">
+        <div id="clockDots"></div>
+        <div id="clockDate" class="mono"></div>
+      </div>
+    </div>
+  </div>
 
-      <div id="revealBox" class="mt-8" hidden>
-        <p class="text-xs text-[#64748B]">정답</p>
-        <p id="reveal" class="mt-1 whitespace-pre-wrap break-keep text-base leading-relaxed"></p>
-        <p id="revealNote" class="mt-2 text-xs text-amber-700" hidden></p>
-        <div id="fix" class="mt-4  border border-amber-300 bg-amber-50 p-3" hidden>
-          <p class="text-xs font-semibold text-amber-700">교차검증 교정답 · 원본 없음, 검수 필요</p>
-          <p id="fixText" class="mt-1 whitespace-pre-wrap break-keep text-base leading-relaxed"></p>
+  <div id="progress">
+    <div class="prog-row">
+      <span id="progNum" class="mono">0 / 0</span>
+      <span id="progSub">남은 0</span>
+    </div>
+    <div class="bar"><div id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="split" class="split">
+    <aside id="pageView" class="page-view" hidden>
+      <div class="page-tools"><button id="blurToggle" type="button" class="btn">블러 끄기</button></div>
+      <div id="figures"></div>
+    </aside>
+
+    <div class="study">
+      <div id="stage" class="stage">
+        <div id="card-next-wrap">
+        <div id="cardNext" class="card-next" aria-hidden="true">
+          <p id="nextSet"></p>
+          <p id="nextQ"></p>
+        </div>
+        <article id="card" class="card">
+          <p id="set"></p>
+          <p id="question"></p>
+
+          <button id="answerOpen" type="button">정답 쓰기 (눌러서 열기)</button>
+
+          <div id="choices" hidden></div>
+
+          <div id="answerBox" hidden>
+            <textarea id="answerIn" rows="4" placeholder="답을 적고 제출하세요"></textarea>
+            <button id="submit" type="button">제출</button>
+          </div>
+
+          <div id="revealBox" hidden>
+            <p>정답</p>
+            <p id="reveal"></p>
+            <p id="revealNote" hidden></p>
+            <div id="fix" hidden>
+              <p>교차검증 교정답 · 원본 없음, 검수 필요</p>
+              <p id="fixText"></p>
+            </div>
+          </div>
+        </article>
+        </div>
+
+        <div class="pager">
+          <button id="prevInline" type="button" class="btn btn-wide">&lsaquo; 이전</button>
+          <button id="nextInline" type="button" class="btn btn-primary btn-wide">다음 &rsaquo;</button>
+        </div>
+
+        <div id="pile" hidden>
+          <div id="pileWrong" class="pile-side pile-left"><button id="pileWrongTag" class="pile-tag pile-review" type="button"></button></div>
+          <div id="pileRight" class="pile-side pile-right"><span id="pileRightTag" class="pile-tag"></span></div>
         </div>
       </div>
-    </article>
-    </div>
-    <div class="mt-5 flex w-full items-center justify-between gap-3">
-      <button id="prevInline" type="button" class="flex-1 bg-white py-3 font-semibold text-[#1E293B] active:scale-[.99]">&lsaquo; 이전</button>
-      <button id="nextInline" type="button" class="flex-1 bg-[#1040E8] py-3 font-semibold text-white active:scale-[.99]">다음 &rsaquo;</button>
-    </div>
-    <div id="pile" hidden>
-      <div id="pileWrong" class="pile-side pile-left"><button id="pileWrongTag" class="pile-tag pile-review" type="button"></button></div>
-      <div id="pileRight" class="pile-side pile-right"><span id="pileRightTag" class="pile-tag"></span></div>
-    </div>
 
-    <div id="dots" class="dots mt-5" hidden></div>
-    <p id="hint" class="mt-6 text-xs text-[#64748B]">왼쪽으로 밀면 이전, 오른쪽으로 밀면 다음</p>
-    <button id="voice" class="mt-4  bg-white px-4 py-2 text-sm font-semibold active:scale-[.99]">정비소 모드 켜 줘</button>
-    <p id="status" role="status" class="mt-3 min-h-5 text-center text-sm text-[#64748B]"></p>
-  </div>
+      <div id="dots" class="dots" hidden></div>
+      <p id="hint">왼쪽으로 밀면 이전, 오른쪽으로 밀면 다음</p>
+      <button id="voice" type="button" class="btn">정비소 모드 켜 줘</button>
+      <p id="status" role="status"></p>
+    </div>
   </div>
 </main>
 
-<div id="progress" class="pointer-events-none fixed left-0 top-0 z-30 w-44  bg-white/90 px-3 py-2 backdrop-blur will-change-transform">
-  <div class="mb-1.5 flex items-center justify-between text-[11px] tabular-nums text-[#64748B]">
-    <span id="progNum">0 / 0</span>
-    <span id="progSub">남은 0</span>
-  </div>
-  <div class="h-1.5 w-full overflow-hidden  bg-stone-200">
-    <div id="progFill" class="h-full  bg-[#1040E8] transition-[width] duration-500 ease-out" style="width:0%"></div>
-  </div>
-</div>
 <button id="loaderPause" type="button" aria-pressed="false" aria-label="캐릭터 일시정지">⏸</button>
 
-<div id="scrim" class="scrim fixed inset-0 bg-black/20"></div>
-<section id="sheet" aria-label="채점 결과"
-         class="sheet fixed inset-x-0 bottom-0 mx-auto max-h-[72dvh] max-w-xl overflow-y-auto rounded-t-3xl bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3">
-  <div class="mx-auto mb-4 h-1 w-10  bg-neutral-300"></div>
+<div id="scrim" class="scrim"></div>
+<section id="sheet" class="sheet" aria-label="채점 결과">
+  <div class="sheet-grip"></div>
   <div class="flex items-center justify-between">
-    <span id="chip" class="text-2xl font-bold"></span>
-    <button id="close" class="text-sm text-[#64748B]">닫기</button>
+    <span id="chip"></span>
+    <button id="close" type="button">닫기</button>
   </div>
-  <div id="sections" class="mt-5 space-y-5"></div>
-  <button id="next" class="mt-8 w-full  bg-[#1040E8] py-3 font-semibold text-white">다음 문제</button>
+  <div id="sections"></div>
+  <button id="next" type="button">다음 문제</button>
 </section>
 
 <div id="bigNo" class="edge-no" aria-hidden="true"><span id="bigNoV"></span><small id="bigNoT"></small></div>
-<button id="navPrev" class="edge-nav edge-nav-l" type="button" aria-label="이전 문제">&lsaquo;</button>
-<button id="navNext" class="edge-nav edge-nav-r" type="button" aria-label="다음 문제">&rsaquo;</button>
+<button id="navPrev" class="edge-nav" type="button" aria-label="이전 문제">&lsaquo;</button>
+<button id="navNext" class="edge-nav" type="button" aria-label="다음 문제">&rsaquo;</button>
 <div id="today" class="today" aria-hidden="true"></div>
-<div id="gaugeL" class="gauge gauge-l" aria-hidden="true"><div class="gauge-track"><div id="gaugeLFill" class="gauge-fill"></div></div><span id="gaugeLTxt" class="gauge-txt"></span></div>
-<div id="gaugeR" class="gauge gauge-r" aria-hidden="true"><div class="gauge-track"><div id="gaugeRFill" class="gauge-fill"></div></div><span id="gaugeRTxt" class="gauge-txt"></span></div>
+<div id="gaugeL" class="gauge" aria-hidden="true"><div class="gauge-track"><div id="gaugeLFill" class="gauge-fill"></div></div><span id="gaugeLTxt" class="gauge-txt"></span></div>
+<div id="gaugeR" class="gauge" aria-hidden="true"><div class="gauge-track"><div id="gaugeRFill" class="gauge-fill"></div></div><span id="gaugeRTxt" class="gauge-txt"></span></div>
 
-<section id="listPanel" class="fixed inset-0 z-40 overflow-y-auto bg-stone-100" hidden>
-  <div class="mx-auto max-w-xl px-4 pb-10 pt-5">
+<section id="listPanel" hidden>
+  <div class="list-wrap">
     <div class="flex items-center justify-between gap-3">
-      <p class="text-lg font-bold">문제 목차 <span class="text-xs font-normal text-[#64748B]">○ = 객관식 가능</span></p>
-      <button id="listClose" class=" bg-white px-3 py-2 text-sm font-semibold">닫기</button>
+      <p class="text-lg font-bold">문제 목차 <span class="text-xs font-normal muted">○ = 객관식 가능</span></p>
+      <button id="listClose" type="button" class="btn">닫기</button>
     </div>
     <div class="mt-4 flex items-center justify-between gap-3">
-      <p id="listScope" class="text-sm text-[#64748B]"></p>
-      <button id="listScopeBtn" class="bg-white px-3 py-2 text-sm font-semibold active:scale-[.99]">전체 보기</button>
+      <p id="listScope" class="text-sm muted"></p>
+      <button id="listScopeBtn" type="button" class="btn">전체 보기</button>
     </div>
-    <input id="listSearch" type="search" placeholder="문제 내용으로 찾기" aria-label="문제 찾기"
-           class="mt-3 w-full  bg-white px-4 py-3 text-sm outline-none">
+    <input id="listSearch" type="search" placeholder="문제 내용으로 찾기" aria-label="문제 찾기">
     <div id="listBody" class="mt-2"></div>
   </div>
 </section>
