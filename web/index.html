@@ -12,26 +12,29 @@
 <meta name="apple-mobile-web-app-title" content="정비 주관식">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap">
 <script>
-  tailwind.config = { theme: { extend: { fontFamily: { sans: ["Geist", "Pretendard", "system-ui", "sans-serif"] } } } };
+  tailwind.config = { theme: { extend: { fontFamily: { sans: ["Plus Jakarta Sans", "Pretendard", "system-ui", "sans-serif"] } } } };
 </script>
 <style>
-  /* ---- 디자인 토큰: achromatic-ledger (크롬은 무채색, 차트색은 데이터 한 곳에만) ---- */
+  /* ---- 디자인 토큰: Atmospheric Serenity (color/DESIGN.md) ---- */
   :root{
-    --ground:#f2f4f7; --surface:#ffffff; --raised:#eef1f5;
-    --border:#e3e7ec; --rule:#eef1f4; --control:#cfd5dd;
-    --text:#111418; --muted:#5f6368; --faint:#6b6b6b;
-    --primary:#141414; --accent:#1d5fbf; --accent-tint:#eaf1fb;
+    --ground:#dce5ee; --surface:rgba(255,255,255,.78); --raised:#e7eeff;
+    --border:rgba(255,255,255,.65); --rule:rgba(16,64,232,.07); --control:rgba(142,167,194,.55);
+    --text:#1e293b; --muted:#64748b; --faint:#64748b;
+    --primary:#1040e8; --accent:#1040e8; --accent-tint:#e7eeff;
     --positive:#247b50; --negative:#c4242a;
     --warning-bg:#fffbeb; --warning-border:#fde68a; --warning-ink:#92400e;
-    --radius-card:8px; --radius-control:6px;
-    --font:"Geist","Pretendard",system-ui,sans-serif;
-    --mono:"Geist Mono",ui-monospace,monospace;
+    --radius-card:16px; --radius-control:12px;
+    --shadow-card:0 8px 32px -4px rgba(16,64,232,.08),0 2px 8px -2px rgba(30,41,59,.05);
+    --font:"Plus Jakarta Sans","Pretendard",system-ui,sans-serif;
+    --display:"Space Grotesk","Pretendard",system-ui,sans-serif;
+    --mono:"Space Grotesk",ui-monospace,monospace;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
-  body{background:var(--ground);color:var(--text);font-family:var(--font);font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+  body{background:linear-gradient(180deg,#dce5ee 0%,#c8d6e5 100%);background-attachment:fixed;/* taste-skill-ignore: color/DESIGN.md의 Atmospheric Canvas 그라데이션은 지정된 디자인이다 */color:var(--text);font-family:var(--font);font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+  h1,.product{font-family:var(--display)}
   button,select,input,textarea{font:inherit;color:inherit}
   button{cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
   button:active:not(:disabled){transform:scale(.99)}
@@ -43,7 +46,7 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px;font-weight:500;color:var(--text);text-decoration:none;white-space:nowrap}
   .btn:hover:not(:disabled){border-color:#9aa3ae}
   .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
-  .btn-primary:hover:not(:disabled){background:#2a2a2a;border-color:#2a2a2a}
+  .btn-primary:hover:not(:disabled){background:#002cb5;border-color:#002cb5}
   .btn-wide{flex:1;height:44px;font-weight:600}
   .select{height:36px;padding:0 10px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:14px;max-width:62%}
 
@@ -89,7 +92,7 @@
   .unblur .ans-blur{display:none}
 
   /* 문제 카드: 흰 면, 1px 테두리, 그림자 없음 */
-  #card{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:28px}
+  #card{position:relative;z-index:1;background:var(--surface);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--radius-card);padding:28px;box-shadow:var(--shadow-card)}
   #set{font-size:13px;color:var(--muted)}
   #question{margin-top:12px;font-size:19px;font-weight:600;line-height:1.6;letter-spacing:-.01em;word-break:keep-all}
   #card-next-wrap{position:relative}
@@ -102,9 +105,9 @@
   #choices{margin-top:24px;display:grid;gap:8px}
   #answerBox{margin-top:24px}
   #answerIn{width:100%;resize:none;padding:14px 16px;background:var(--surface);border:1px solid var(--control);border-radius:var(--radius-control);font-size:16px;line-height:1.6}
-  #answerIn:focus{border-color:var(--accent);outline:2px solid rgba(29,95,191,.15);outline-offset:0}
+  #answerIn:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(16,64,232,.15)}
   #submit{margin-top:12px;width:100%;height:44px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius-control);font-weight:600}
-  #submit:hover{background:#2a2a2a}
+  #submit:hover{background:#002cb5}
   #revealBox{margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}
   #revealBox > p:first-child{font-size:13px;color:var(--muted)}
   #reveal{margin-top:4px;font-size:16px;line-height:1.7;white-space:pre-wrap;word-break:keep-all}
