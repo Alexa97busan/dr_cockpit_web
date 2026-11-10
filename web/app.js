@@ -10,7 +10,7 @@ const VERDICT = {
 
 let list = [];
 let allList = [];   // 전체 문항 (객관식 모드에서는 list 가 이 중 객관식 가능한 것만 된다)
-let qMode = localStorage.getItem("qMode") === "mc" ? "mc" : "sub";
+let qMode = localStorage.getItem("qMode") === "sub" ? "sub" : "mc";
 let idx = 0;
 let cur = null;
 let answering = false;
@@ -141,7 +141,7 @@ const R = {
 // 로딩바 정지/재생: 누르면 캐릭터 움직임만 멈춘다. 상태는 localStorage "loaderPaused"에 남긴다.
 const LOADER_KEY = "loaderPaused";
 let LOADER_PAUSED = false;
-try { LOADER_PAUSED = localStorage.getItem(LOADER_KEY) === "1"; } catch (e) {}
+try { const v = localStorage.getItem(LOADER_KEY); LOADER_PAUSED = v === null ? true : v === "1"; } catch (e) { LOADER_PAUSED = true; }
 let loopOn = false;
 function startLoop() {
   if (loopOn) return;

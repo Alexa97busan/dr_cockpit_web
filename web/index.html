@@ -133,6 +133,24 @@ main.wide .split { display: grid; grid-template-columns: 1fr; gap: 20px; align-i
 .page-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
 .ans-blur { position: absolute; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(255, 255, 255, 0.35); border-radius: 4px; }
 .unblur .ans-blur { display: none; }
+/* 모바일(640px 이하): 가장자리 장식이 카드와 겹치지 않게 정리, 헤더 줄바꿈, 하단 이전/다음 */
+@media (max-width: 640px) {
+  main { padding-bottom: 96px; }
+  header { flex-wrap: wrap; row-gap: 10px; }
+  #subject { max-width: 100%; flex: 1 1 100%; }
+  header > div { flex-wrap: wrap; justify-content: flex-end; }
+  #card { padding: 20px; }
+  #progress, .gauge, .edge-no, .today { display: none; }
+  .edge-nav { top: auto; bottom: calc(12px + env(safe-area-inset-bottom)); width: 48px; height: 48px; }
+  .edge-nav-l { left: 12px; }
+  .edge-nav-r { right: 12px; }
+  #loaderPause { left: 72px; bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .sheet { max-height: 80dvh; }
+}
+/* 터치 기기: 누르고 남은 hover 떠오름을 없앤다 */
+@media (hover: none) {
+  button:hover:not(:disabled), .choice:hover:not(:disabled), .edge-nav:hover, .dot:hover { transform: none; }
+}
 </style>
 </head>
 <body class="min-h-dvh atmos font-sans text-[#1E293B] antialiased overflow-x-hidden">
