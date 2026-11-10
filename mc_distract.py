@@ -61,6 +61,17 @@ def ambiguous(cand, correct):
     return False
 
 
+def len_ok(cand, correct):
+    """보기 길이를 정답과 비슷하게 맞춘다. 정답만 길거나 짧은 것을 찍는 힌트를 줄이기 위함."""
+    nc, nr = len(_norm(cand)), len(_norm(correct))
+    return abs(nc - nr) <= max(3, 0.35 * nr)
+
+
+def same_or(cand, correct):
+    """'A 또는 B' 형식은 정답에만 있으면 힌트가 되므로 양쪽이 같을 때만 쓴다."""
+    return ("또는" in cand) == ("또는" in correct)
+
+
 def _load_json(path, default):
     try:
         with open(path, encoding="utf-8") as f:
@@ -119,14 +130,14 @@ def pick(uid, correct, subject, pool, rng):
 
     gen = [t for t in _generated().get(str(uid), ("", []))[1]]
     contrast = _contrast(correct)
-    similar = sorted(same, key=lambda a: -_sim(a, correct))[:10]
+    # 글자 유사도 상위 20개에서 무작위로 고른다. 상위 10개를 고정하면 같은 오답이 여러 문항에 반복된다.
+    similar = sorted(same, key=lambda a: -_sim(a, correct))[:20]
 
     tiers = []
-    # 난이도: AI 오답 → 글자 유사도 상위(정렬 유지, 섞지 않음) → 반대 개념 → 나머지
-    for tier, keep_order in ((gen, False), (similar, True), (contrast, False)):
+    # 난이도: AI 오답 → 글자 유사도 상위권(무작위) → 반대 개념 → 나머지
+    for tier in (gen, similar, contrast):
         t = list(dict.fromkeys(tier))
-        if not keep_order:
-            rng.shuffle(t)
+        rng.shuffle(t)
         tiers.append(t)
     rest = list(dict.fromkeys(same + everything))
     rng.shuffle(rest)
@@ -134,19 +145,22 @@ def pick(uid, correct, subject, pool, rng):
 
     chosen = []
 
-    def take(cands, need_fmt):
+    def take(cands, need_fmt, need_len):
         for c in cands:
             if len(chosen) >= want:
                 return
             if c in chosen or ambiguous(c, correct):
                 continue
+            if not same_or(c, correct):
+                continue
             if need_fmt and fmt_class(c) != cfmt:
+                continue
+            if need_len and not len_ok(c, correct):
                 continue
             chosen.append(c)
 
-    # 1차: 형식이 맞는 후보를 우선순위대로. 2차: 형식 조건을 풀어서 채운다.
-    for tier in tiers:
-        take(tier, True)
-    for tier in tiers:
-        take(tier, False)
+    # 1차: 형식·길이가 맞는 후보. 2차: 길이 조건을 풀고 형식만 맞춘다. 3차: 형식도 푼다(후보가 모자랄 때만).
+    for need_fmt, need_len in ((True, True), (True, False), (False, False)):
+        for tier in tiers:
+            take(tier, need_fmt, need_len)
     return chosen[:want]
