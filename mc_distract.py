@@ -122,9 +122,11 @@ def pick(uid, correct, subject, pool, rng):
     similar = sorted(same, key=lambda a: -_sim(a, correct))[:10]
 
     tiers = []
-    for tier in (gen, contrast, similar):
+    # 난이도: AI 오답 → 글자 유사도 상위(정렬 유지, 섞지 않음) → 반대 개념 → 나머지
+    for tier, keep_order in ((gen, False), (similar, True), (contrast, False)):
         t = list(dict.fromkeys(tier))
-        rng.shuffle(t)
+        if not keep_order:
+            rng.shuffle(t)
         tiers.append(t)
     rest = list(dict.fromkeys(same + everything))
     rng.shuffle(rest)
