@@ -135,13 +135,13 @@ main.wide .split { display: grid; grid-template-columns: 1fr; gap: 20px; align-i
 .unblur .ans-blur { display: none; }
 /* 모바일(640px 이하): 가장자리 장식이 카드와 겹치지 않게 정리, 헤더 줄바꿈, 하단 이전/다음 */
 @media (max-width: 640px) {
-  main { padding-bottom: 96px; }
+  main { padding-bottom: 40px; }
   header { flex-wrap: wrap; row-gap: 10px; }
   #subject { max-width: 100%; flex: 1 1 100%; }
   header > div { flex-wrap: wrap; justify-content: flex-end; }
   #card { padding: 20px; }
   #progress, .gauge, .edge-no, .today { display: none; }
-  .edge-nav { top: auto; bottom: calc(12px + env(safe-area-inset-bottom)); width: 48px; height: 48px; }
+  .edge-nav { display: none; }
   .edge-nav-l { left: 12px; }
   .edge-nav-r { right: 12px; }
   #loaderPause { left: 72px; bottom: calc(18px + env(safe-area-inset-bottom)); }
