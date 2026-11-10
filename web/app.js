@@ -1614,6 +1614,7 @@ function toggleReview(e) {
 $("pileWrongTag").onclick = toggleReview;
 $("navPrev").onclick = (e) => { e.currentTarget.blur(); run(() => move(-1, true)); };
 $("navNext").onclick = (e) => { e.currentTarget.blur(); run(() => move(1, true)); };
+$("nextInline").onclick = (e) => { e.currentTarget.blur(); run(() => move(1, true)); };
 renderPile();
 
 // ---- 뒤로 가기: 카드는 옆이 아니라 뒤(위쪽으로 살짝 올라가고 작아지며 흐려짐)로 물러난다 ----
