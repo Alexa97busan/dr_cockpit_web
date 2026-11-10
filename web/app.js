@@ -47,6 +47,12 @@ async function loadList() {
   idx = 0;
   if (!list.length) {
     cur = null;
+    // 이전 문항의 과목·보기·그림이 남지 않도록 화면을 함께 비운다
+    $("set").textContent = "";
+    $("pos").textContent = "0 / 0";
+    paintChoices({});
+    showFigures([]);
+    updateRing();
     $("question").textContent = "문항이 없습니다.";
     return;
   }
