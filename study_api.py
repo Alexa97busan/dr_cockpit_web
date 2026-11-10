@@ -197,7 +197,7 @@ def question(n: int):
 
 @app.get("/api/context/{n}")
 def context(n: int):
-    """웹채팅이 문제를 대화에 넣을 때 쓴다. 지문·보기는 항상 주고, 정답·풀이는 교사용 문항만 준다.
+    """문제 한 개의 지문·보기·(교사용이면) 정답·풀이를 한 번에 준다. 지문·보기는 항상 주고, 정답·풀이는 교사용 문항만 준다.
     학생용 문항의 정답·풀이는 채점 전에 내주지 않는다(_public 과 같은 규칙)."""
     x = _item(n)
     out = {"n": n, "subject": x["subject"], "set": x["set"], "no": x.get("no"), "kind": x["kind"],
