@@ -55,11 +55,34 @@ def _item(n):
 _MC_POOL = None
 
 
+MANUAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db_study", "mc_manual.json")
+_MANUAL = None
+_NO_ANSWER = "원본 자료에 정답이 없는 문항입니다."
+_OX = ("O", "X")
+
+
+def _manual():
+    """사람이 확정한 객관식 정답·오답 (db_study/mc_manual.json). 없으면 빈 값."""
+    global _MANUAL
+    if _MANUAL is None:
+        try:
+            with open(MANUAL_PATH, encoding="utf-8") as f:
+                _MANUAL = json.load(f)
+        except (OSError, ValueError):
+            _MANUAL = {}
+    return _MANUAL
+
+
 def _mc_ok(x):
-    if x.get("figures"):  # 그림 조각이 있는 문항은 주관식으로만 출제한다 (원본 쪽 이미지 figure_pages 는 기준이 아님)
-        return False
+    m = _manual().get(x.get("uid") or "", {})
+    if m.get("answer"):
+        return True
     a = (x.get("answer") or "").strip()
-    return 2 <= len(a) <= 24
+    if a in _OX:  # O/X 문항은 ○·× 두 보기로 푼다
+        return True
+    if not a or a == _NO_ANSWER:  # 정답이 원본에 없는 문항은 사람이 정답을 넣기 전까지 제외
+        return False
+    return 2 <= len(a) <= 60
 
 
 def _pool():
@@ -68,7 +91,9 @@ def _pool():
         pool = {}
         for x in study.QBANK:
             if _mc_ok(x):
-                a = x["answer"].strip()
+                a = _correct(x)
+                if a in _OX:  # O/X 는 오답 후보 풀에 넣지 않는다
+                    continue
                 lst = pool.setdefault(x["subject"], [])
                 if a not in lst:
                     lst.append(a)
@@ -76,13 +101,25 @@ def _pool():
     return _MC_POOL
 
 
+def _correct(x):
+    """정답 글: 사람이 확정한 값(mc_manual.json)이 있으면 그것, 없으면 문제 은행의 정답."""
+    m = _manual().get(x.get("uid") or "", {})
+    return (m.get("answer") or x.get("answer") or "").strip()
+
+
 def _choices(n, x):
     """보기 4개와 정답 위치. 같은 문항은 항상 같은 보기 순서가 나오도록 번호로 시드를 고정한다."""
-    correct = x["answer"].strip()
+    correct = _correct(x)
     pool = _pool()
     uid = x.get("uid") or n
     rng = random.Random(f"mc-{uid}")  # 문제 은행을 다시 만들어도 같은 문항의 보기 순서가 유지되도록 uid 로 시드
-    opts = [correct] + mc_distract.pick(uid, correct, x["subject"], pool, rng)  # 오답: AI 생성·반대 개념·유사 답 순 (mc_distract.py)
+    m = _manual().get(uid, {})
+    if correct in _OX:
+        opts = ["O", "X"]  # 두 보기
+    elif m.get("options"):
+        opts = [correct] + list(m["options"])[:3]  # 사람이 정한 오답
+    else:
+        opts = [correct] + mc_distract.pick(uid, correct, x["subject"], pool, rng)  # 오답: AI 생성·반대 개념·유사 답 순 (mc_distract.py)
     rng.shuffle(opts)
     return opts, opts.index(correct)
 
