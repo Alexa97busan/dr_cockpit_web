@@ -1,5 +1,4 @@
 // 정비산업기사 주관식 프론트 (스와이프 카드 뼈대). 데이터·채점·검색은 모두 study_api 를 통해서만 받는다.
-const API = "http://127.0.0.1:8765";
 const $ = (id) => document.getElementById(id);
 const DRAG_OK = 90; // 이 거리 이상 밀면 동작이 확정된다
 const VERDICT = {
@@ -22,22 +21,7 @@ let dx = 0;
 const isTeacher = () => cur && cur.kind === "교사용";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function api(path, body) {
-  const opt = body
-    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }
-    : {};
-  let r;
-  try {
-    r = await fetch(API + path, opt);
-  } catch {
-    throw new Error("API 서버에 연결하지 못했습니다. study_api 서버가 켜져 있는지 확인하세요.");
-  }
-  if (!r.ok) {
-    const j = await r.json().catch(() => ({}));
-    throw new Error(typeof j.detail === "string" ? j.detail : `요청 실패 (${r.status})`);
-  }
-  return r.json();
-}
+// api() 는 study-static.js 가 만든다 (서버 없이 data/study-data.js 에서 응답).
 
 function setStatus(msg) {
   $("status").textContent = msg || "";
@@ -1081,16 +1065,7 @@ $("voice").onclick = () => {
 
 // API가 아직 시작 중이어도 화면은 바로 뜨고, 준비되면 데이터를 채운다.
 async function waitApi() {
-  for (let i = 0; i < 300; i++) {
-    try {
-      await fetch(API + "/api/health");
-      return;
-    } catch {
-      setStatus("서버를 시작하는 중입니다… (첫 실행은 몇 초 걸립니다)");
-      await sleep(1000);
-    }
-  }
-  throw new Error("API 서버가 응답하지 않습니다. study_api 서버가 켜져 있는지 확인하세요.");
+  // 서버가 없으므로 기다릴 것이 없다. 데이터는 study-static.js 가 바로 준다.
 }
 
 // 문항 번호가 바뀌면 푼 기록의 번호도 새 번호로 옮긴다 (한 번만 실행). 삭제된 문항의 기록은 지운다.

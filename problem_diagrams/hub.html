@@ -26,7 +26,7 @@
   <p class="sub">문제풀이를 여기서 엽니다. 불이 켜진 곳이 실행 중입니다.</p>
   <a class="link" href="index.html">
     <span><b>자동차정비산업기사 문제풀이</b><small>문항 풀이 · 객관식 · 해설</small></span>
-    <span class="dot" id="dStudy"></span>
+    <span class="dot on" id="dStudy"></span>
   </a>
   <a class="link" href="diagrams_3d.html">
     <span><b>3D 문제해설 다이어그램</b><small>단원별 3D 역학·위치관계 뷰어 (Atmospheric Serenity)</small></span>
@@ -38,7 +38,6 @@
   const probe = (url, id) => fetch(url, { mode: "no-cors", cache: "no-store" })
     .then(() => document.getElementById(id).classList.add("on"))
     .catch(() => {});
-  probe("http://127.0.0.1:8765/api/health", "dStudy");
 </script>
 </body>
 </html>

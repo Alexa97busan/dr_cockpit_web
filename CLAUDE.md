@@ -6,7 +6,8 @@
 - `run_cockpit.sh [ask]`: 실행 진입점. 가상환경은 `venv/`.
 
 ### 문제풀이 웹앱 (정비산업기사 기출)
-- `study_api.py` (FastAPI, 127.0.0.1:8765, CORS localhost:3000): 문제 조회·힌트(정적)·객관식 선택. 주관식 채점(`/api/grade`)은 중계 경로 제거로 항상 503. 외부 참고 검색(Brave·위키백과)과 `/외부` 명령도 제거됨(`/api/refs/{n}`은 error와 빈 목록). 로컬 LLM 기능(암기팁/메모)은 제거됨.
+- 서버 없는 문제풀이: `export_static.py`가 `study_api`의 가공 함수로 `web/data/study-data.js`(`window.STUDY_DATA`)를 만든다. 문항 은행(`db_study/qbank.json`)이나 보기 규칙이 바뀌면 `venv/bin/python export_static.py`를 다시 실행한다. `web/study-static.js`가 같은 API 모양(`api(path, body)`)을 로컬에서 흉내 낸다. 정답은 이 파일에 들어 있으므로 개발자 도구로 볼 수 있다.
+- `study_api.py` (FastAPI, 127.0.0.1:8765, CORS localhost:3000; 서버 없는 화면은 쓰지 않음): 문제 조회·힌트(정적)·객관식 선택. 주관식 채점(`/api/grade`)은 중계 경로 제거로 항상 503. 외부 참고 검색(Brave·위키백과)과 `/외부` 명령도 제거됨(`/api/refs/{n}`은 error와 빈 목록). 로컬 LLM 기능(암기팁/메모)은 제거됨.
   - `/api/questions`, `/api/questions/{n}`, `/api/context/{n}`, `/api/refs/{n}`, `/api/hint`, `/api/choice`, `/api/grade`, `/api/reveal`
   - 채점 경로(`/api/grade`)는 제거되어 항상 503 `채점 불가`. 채점 응답 파싱(`study.py`의 `parse_grade`·`show_grade`)은 남아 있다. 판정은 `## 판정` 섹션의 **첫 줄 앞부분**이 `정답`/`부분`/`오답`으로 시작할 때만 인정, 그 외는 `unknown`. 첫 줄에 `/`가 있으면(템플릿 문구 에코) 역시 `unknown`. CLI(`study.py show_grade`)도 같은 규칙.
   - `/api/context/{n}`: 지문·보기·`kind`는 항상 주고, 정답·풀이는 `교사용`만 준다(학생용은 채점 전 비공개, `_public`과 같은 규칙).
@@ -14,11 +15,11 @@
   - `오답노트/*.md`를 카드로 파싱. `(1)` 복사본은 건너뛴다. 모범답안이 보기에 없는 노트는 경고를 찍고 건너뛴다(전체 목록은 유지).
   - 풀이 기록: `db_study/review_state.json`. 연속 `MASTER_STREAK`(=2)회 정답이면 숙달.
   - 엔드포인트: `/cards`, `/next?mode=all|wrong`, `/answer`, `/stats`.
-- `web/`: 정적 프런트(`index.html`, `review.html`, `hub.html`, `app.js`). `run_web.sh`가 uvicorn(8765)과 `http.server 3000`을 띄우고 index.html을 연다.
+- `web/`: 정적 프런트(`index.html`, `review.html`, `hub.html`, `app.js`, `study-static.js`, `data/study-data.js`). `run_web.sh`는 서버 없이 `web/index.html`만 연다. 오답노트 복습(`review.html`)은 아직 `review_api`(8765)가 필요하다.
 
 ## 실행
 - 질문기: `bash run_cockpit.sh ask`
-- 문제풀이 웹: `bash run_web.sh`
+- 문제풀이 웹: `bash run_web.sh` (서버 없이 index.html 을 연다. 주관식 채점 `/api/grade`는 서버가 필요해 이 버전에서 막혀 있다)
 
 ## 설정
 - 로컬 모델: `DR_LOCAL_MODEL` (기본 qwen2.5:3b). 7b는 맥에서 멈춤·발열이 심해 기본에서 뺐다. 공부사이트(`study_api.py`)는 환경변수와 무관하게 3b로 고정한다.
