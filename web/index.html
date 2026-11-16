@@ -185,9 +185,20 @@
   @media (hover:none){
     button:hover:not(:disabled),.choice:hover:not(:disabled),.dot:hover{transform:none}
   }
+
+  /* light-flow background: 밝은 테마에 맞춘 약한 빛줄기 (pointer-events:none, 기능 영향 없음) */
+  .flow-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .flow-bg i{position:absolute;left:-40vw;height:1px;width:360px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);box-shadow:0 0 8px rgba(255,255,255,.8);opacity:.55;animation:flow-x linear infinite}
+  .flow-bg i:nth-child(1){top:18%;animation-duration:9s}
+  .flow-bg i:nth-child(2){top:41%;width:520px;height:2px;animation-duration:13s;animation-delay:-4s;opacity:.4}
+  .flow-bg i:nth-child(3){top:67%;width:280px;animation-duration:8s;animation-delay:-2s}
+  @keyframes flow-x{to{transform:translateX(140vw)}}
+  main#main{position:relative;z-index:1}
+  @media (prefers-reduced-motion:reduce){.flow-bg{display:none}}
 </style>
 </head>
 <body class="min-h-dvh antialiased atmos">
+<div class="flow-bg" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <main id="main">
   <header class="topbar">
