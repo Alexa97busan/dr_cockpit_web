@@ -310,7 +310,7 @@
     box.textContent = "";
     const t = el("table");
     const head = el("tr");
-    ["과목", "푼 문항", "정답률", "정답/시도"].forEach((h, i) => head.append(el("th", i ? "num" : "", h)));
+    ["과목", "푼 문항", "남은 비율", "정답률", "정답/시도"].forEach((h, i) => head.append(el("th", i ? "num" : "", h)));
     t.append(head);
     let weakest = null;
     rows.forEach((r, s) => {
@@ -320,11 +320,15 @@
       tr.append(
         el("td", "", s),
         el("td", "num", `${r.solved} / ${r.total}`),
+        el("td", "num", r.total ? `${Math.round(((r.total - r.solved) / r.total) * 100)}%` : "-"),
         el("td", "num", acc === null ? "-" : `${acc}%`),
         el("td", "num", `${r.correct} / ${r.attempted}`),
       );
       t.append(tr);
     });
+    const tot = [...rows.values()].reduce((a, r) => ({ total: a.total + r.total, solved: a.solved + r.solved }), { total: 0, solved: 0 });
+    const pct = tot.total ? Math.round((tot.solved / tot.total) * 100) : 0;
+    box.append(el("p", "", `전체 ${tot.total}문항 중 ${tot.solved}문항 풀이 · 완주율 ${pct}% · 남은 ${100 - pct}%(${tot.total - tot.solved}문항)`));
     box.append(t);
     box.append(el("p", "muted", weakest ? `가장 약한 과목(시도 3회 이상): ${weakest.s} (${weakest.acc}%)` : "시도 3회 이상인 과목이 생기면 가장 약한 과목을 알려 드립니다."));
 
