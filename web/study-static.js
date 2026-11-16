@@ -30,6 +30,34 @@
     return q;
   }
 
+  // 주관식 자가채점 (서버 없이). 정답 키를 '또는', '/', ',' 로 나눈 표현 중 하나와 같으면 정답.
+  // 띄어쓰기·괄호·대소문자·하이픈은 무시한다. 키가 없는 문항은 판정하지 않는다.
+  function normKey(s) {
+    return String(s || "").toLowerCase().replace(/[\s()\[\]·.,'"‘’“”\-_/]/g, "");
+  }
+  function altsOf(answer) {
+    return String(answer || "").split(/\s*(?:또는|\bor\b|\/|;|,)\s*/i).map(normKey).filter(Boolean);
+  }
+  function gradeSubjective(n, text) {
+    const s = secret[String(n)];
+    const hasKey = s && s.answer && !s.answer.startsWith("원본 자료에");
+    if (!hasKey) {
+      return {
+        verdict: "unknown",
+        sections: [{ title: "판정", body: "이 문항은 정답 키가 없어 자동 채점하지 않습니다. 해설을 보고 직접 확인하세요." }],
+        answer: s ? s.answer : "",
+      };
+    }
+    const got = normKey(text);
+    const hit = got !== "" && altsOf(s.answer).includes(got);
+    const sections = [{
+      title: "판정",
+      body: hit ? "정답 키와 일치합니다." : "정답 키와 일치하지 않습니다. 모범답안의 명칭을 그대로 확인하세요.",
+    }];
+    if (s.solution) sections.push({ title: "풀이", body: s.solution });
+    return { verdict: hit ? "correct" : "wrong", sections, answer: s.answer };
+  }
+
   window.api = async function api(path, body) {
     const p = path.split("?")[0];
     try {
@@ -81,7 +109,7 @@
         return ok({ n, answer: s.answer, solution: s.solution });
       }
       if (p === "/api/grade") {
-        return fail("주관식 채점은 서버가 필요해 이 버전에서는 쓸 수 없습니다. 정답 보기를 이용하세요.");
+        return ok(gradeSubjective(checkN(body.n), body.answer));
       }
       return fail("지원하지 않는 요청입니다.");
     } catch (e) {
