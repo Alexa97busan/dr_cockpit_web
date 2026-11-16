@@ -51,6 +51,8 @@
 </style>
 </head>
 <body>
+<nav class="sitebar" aria-label="사이트 이동"><a href="hub.html">허브</a><a href="index.html">문제풀이</a><a href="tools.html" aria-current="page">학습 도구</a></nav>
+<style>.sitebar{position:sticky;top:0;z-index:45;display:flex;gap:4px;padding:8px 12px;background:rgba(251,251,250,.94);border-bottom:1px solid rgba(16,64,232,.16)}.sitebar a{padding:6px 12px;color:#1040e8;text-decoration:none;font-size:14px;border:1px solid transparent}.sitebar a:hover{border-color:rgba(16,64,232,.3)}.sitebar a[aria-current="page"]{background:#1040e8;color:#fff}</style>
 <header>
   <h1>정비 학습 도구</h1>
   <nav class="noprint">
@@ -58,7 +60,6 @@
     <button type="button" data-tab="dash" aria-pressed="false">과목 대시보드</button>
     <button type="button" data-tab="notes" aria-pressed="false">책갈피·오답</button>
     <button type="button" data-tab="cards" aria-pressed="false">암기 카드</button>
-    <a href="index.html" style="align-self:center;font-size:14px;margin-left:6px">← 문제풀이로</a>
   </nav>
   <p id="status" class="noprint"></p>
 </header>
